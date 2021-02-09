@@ -1,0 +1,6 @@
+version = 294
+name = "secure-all-things"
+description = "TBC"
+authors = ["Dora Militaru"]
+language = "rust"
+service_id = "2OhGXZD9s3EzEYh2h1I2ef"

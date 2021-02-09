@@ -4,3 +4,4 @@ Cargo.lock
 /.hidden
 /bin
 /pkg
+.DS_Store

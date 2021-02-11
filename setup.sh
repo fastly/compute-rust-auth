@@ -19,5 +19,5 @@ createTlsBackend $SERVICE_ID $NEXT_VERSION idp $IDP_HOST
 # Origin backend
 createTlsBackend $SERVICE_ID $NEXT_VERSION backend $TLS_ORIGIN_HOST
 
-# # Activate
+# Activate
 fastly service-version activate --service-id=$SERVICE_ID --version=$(($NEXT_VERSION+0))

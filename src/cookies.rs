@@ -8,8 +8,8 @@ pub fn parse(cookie_string: &str) -> HashMap<String, String> {
         .filter_map(|kv| {
             kv.find("=").map(|index| {
                 let (key, value) = kv.split_at(index);
-                let key = key.to_string();
-                let value = value[1..].to_string();
+                let key = key.trim().to_string();
+                let value = value[1..].trim().to_string();
                 (key, value)
             })
         })

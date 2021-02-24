@@ -26,7 +26,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             // Validate the access token using the OpenID userinfo endpoint;
             // bearer authentication supports opaque, JWT and other token types (PASETO, Hawk),
             // depending on your Identity Provider configuration.
-            let mut userinfo_res = Request::get(&settings.openid_configuration.userinfo_endpoint)
+            let mut userinfo_res = Request::get(settings.openid_configuration.userinfo_endpoint)
                 .with_header(AUTHORIZATION, format!("Bearer {}", access_token))
                 .send("idp")?;
             // Surface any errors and respond early.

@@ -1,65 +1,61 @@
 use serde::{Deserialize};
 
-fn default_callback_path() -> String {
-    "/callback".to_string()
-}
-
-fn default_code_challenge_method() -> String {
-    "S256".to_string()
-}
-
-fn default_state_parameter_length() -> usize {
-    10
-}
-
-fn default_to_false() -> bool {
-    false
-}
-
-#[derive(Deserialize, Default)]
-pub struct ServiceConfiguration {
-    pub client_id: String,
-    pub client_secret: Option<String>,
-    #[serde(default = "default_to_false")]
+#[derive(Deserialize)]
+#[serde(default)]
+pub struct ServiceConfiguration<'a> {
+    pub client_id: &'a str,
+    pub client_secret: Option<&'a str>,
     pub verify_access_token: bool,
-    #[serde(default = "default_to_false")]
     pub jwt_access_token: bool,
-    #[serde(default = "default_callback_path")]
-    pub callback_path: String,
-    #[serde(default = "default_code_challenge_method")]
-    pub code_challenge_method: String,
-    #[serde(default = "default_state_parameter_length")]
+    pub callback_path: &'a str,
+    pub code_challenge_method: &'a str,
     pub state_parameter_length: usize,
 }
 
-#[derive(Deserialize, Default)]
-pub struct OpenIdConfiguration {
-    pub issuer: String,
-    pub authorization_endpoint: String,
-    pub token_endpoint: String,
-    pub userinfo_endpoint: String,
+impl Default for ServiceConfiguration<'static> {
+    fn default() -> Self {
+        Self {
+            client_id: "",
+            client_secret: None,
+            verify_access_token: false,
+            jwt_access_token: false,
+            callback_path: "/callback",
+            code_challenge_method: "S256",
+            state_parameter_length: 10
+        }
+    }
 }
 
 #[derive(Deserialize, Default)]
-pub struct JsonWebKey {
+pub struct OpenIdConfiguration<'a> {
+    pub issuer: &'a str,
+    pub authorization_endpoint: &'a str,
+    pub token_endpoint: &'a str,
+    pub userinfo_endpoint: &'a str,
+}
+
+#[derive(Deserialize, Default)]
+pub struct JsonWebKey<'a> {
     #[serde(rename = "kid")]
-    pub key_id: String,
+    pub key_id: &'a str,
     #[serde(rename = "e")]
-    pub exponent: String,
+    pub exponent: &'a str,
     #[serde(rename = "n")]
-    pub modulus: String,
+    pub modulus: &'a str,
 }
 
 #[derive(Deserialize, Default)]
-pub struct Jwks {
-    pub keys: Vec<JsonWebKey>,
+pub struct Jwks<'a> {
+    #[serde(borrow)]
+    pub keys: Vec<JsonWebKey<'a>>,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Config {
-    pub config: ServiceConfiguration,
-    pub jwks: Jwks,
-    pub openid_configuration: OpenIdConfiguration,
+    #[serde(borrow)]
+    pub config: ServiceConfiguration<'static>,
+    pub jwks: Jwks<'static>,
+    pub openid_configuration: OpenIdConfiguration<'static>,
 }
 
 impl Config {

@@ -26,7 +26,7 @@ pub struct ExchangePayload<'a> {
 pub struct AuthCodePayload<'a> {
     pub client_id: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_secret: Option<String>,
+    pub client_secret: Option<&'a str>,
     pub code_challenge: &'a str,
     pub code_challenge_method: &'a str,
     pub redirect_uri: &'a str,

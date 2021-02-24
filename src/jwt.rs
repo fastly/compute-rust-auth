@@ -26,23 +26,28 @@ pub fn validate_token_rs256(token_string: &str, settings: &Config) -> Result<(),
         return Err(ValidationError::AlgorithmMismatch.into());
     }
     // Calculate the public key used to sign the token.
-    let key = settings
+    // TODO: This is nasty. How not to as_ref().unwrap().to_string()?
+    match settings
         .jwks
         .keys
         .iter()
         .find(|&k| k.key_id == token.header().key_id.as_ref().unwrap().to_string())
-        .unwrap();
-    let modulus = base64::decode_config(&key.modulus, base64::URL_SAFE_NO_PAD)?;
-    let exponent = base64::decode_config(&key.exponent, base64::URL_SAFE_NO_PAD)?;
-    let verifying_key = RsaVerifyingKey::from_components(&modulus, &exponent)?;
-    // Validate the token's integrity.
-    let token: Token<CustomClaims> = Rs256.validate_integrity(&token, &verifying_key)?;
-    // Validate the token's claims.
-    token.claims().validate_expiration(TimeOptions::default())?;
-    if (token.claims().custom.issuer != settings.openid_configuration.issuer)
-        || (token.claims().custom.audience != settings.config.client_id)
     {
-        return Err(ValidationError::NoClaim.into());
+        Some(key) => {
+            let modulus = base64::decode_config(&key.modulus, base64::URL_SAFE_NO_PAD)?;
+            let exponent = base64::decode_config(&key.exponent, base64::URL_SAFE_NO_PAD)?;
+            let verifying_key = RsaVerifyingKey::from_components(&modulus, &exponent)?;
+            // Validate the token's integrity.
+            let token: Token<CustomClaims> = Rs256.validate_integrity(&token, &verifying_key)?;
+            // Validate the token's claims.
+            token.claims().validate_expiration(TimeOptions::default())?;
+            if (token.claims().custom.issuer != settings.openid_configuration.issuer)
+                || (token.claims().custom.audience != settings.config.client_id)
+            {
+                return Err(ValidationError::NoClaim.into());
+            }
+            Ok(())
+        }
+        _ => Err(ValidationError::InvalidPublicKey.into()),
     }
-    Ok(())
 }

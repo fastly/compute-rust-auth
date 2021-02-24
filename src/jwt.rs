@@ -3,6 +3,7 @@ use fastly::Error;
 use jwt_compact_preview::{
     alg::{Rs256, RsaVerifyingKey},
     prelude::*,
+    ValidationError
 };
 use serde::Deserialize;
 use std::convert::TryFrom;
@@ -21,7 +22,9 @@ pub struct CustomClaims {
 pub fn validate_token_rs256(token_string: &str, settings: &Config) -> Result<(), Error> {
     let token = UntrustedToken::try_from(token_string)?;
     // Ensure the algorithm used to sign the token is compatible with the validation function.
-    assert_eq!(token.algorithm(), "RS256");
+    if token.algorithm() != "RS256" {
+        return Err(ValidationError::AlgorithmMismatch.into())
+    }
     // Calculate the public key used to sign the token.
     let key = settings
         .jwks
@@ -36,6 +39,7 @@ pub fn validate_token_rs256(token_string: &str, settings: &Config) -> Result<(),
     let token: Token<CustomClaims> = Rs256.validate_integrity(&token, &verifying_key)?;
     // Validate the token's claims.
     token.claims().validate_expiration(TimeOptions::default())?;
+    
     assert_eq!(
         token.claims().custom.issuer,
         settings.openid_configuration.issuer

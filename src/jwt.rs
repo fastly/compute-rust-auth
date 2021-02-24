@@ -3,7 +3,7 @@ use fastly::Error;
 use jwt_compact_preview::{
     alg::{Rs256, RsaVerifyingKey},
     prelude::*,
-    ValidationError,
+    ValidationError
 };
 use serde::Deserialize;
 use std::convert::TryFrom;
@@ -25,13 +25,18 @@ pub fn validate_token_rs256(token_string: &str, settings: &Config) -> Result<(),
     if token.algorithm() != "RS256" {
         return Err(ValidationError::AlgorithmMismatch.into());
     }
+    // Match the public key id for the JSON web key.
+    let jwk_key_id = if let Some(jwk_key_id) = token.header().key_id.as_ref() {
+        jwk_key_id
+    } else {
+        return Err(ValidationError::InvalidPublicKey.into());
+    };
     // Calculate the public key used to sign the token.
-    // TODO: This is nasty. How not to as_ref().unwrap().to_string()?
     match settings
         .jwks
         .keys
         .iter()
-        .find(|&k| k.key_id == token.header().key_id.as_ref().unwrap().to_string())
+        .find(|&k| k.key_id == jwk_key_id)
     {
         Some(key) => {
             let modulus = base64::decode_config(&key.modulus, base64::URL_SAFE_NO_PAD)?;

@@ -87,6 +87,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
                         client_id: &settings.config.client_id,
+                        client_secret: settings.config.client_secret,
                         code: &qs.code,
                         code_verifier: code_verifier,
                         grant_type: "authorization_code",
@@ -136,7 +137,6 @@ fn main(mut req: Request) -> Result<Response, Error> {
         let authorize_req = Request::get(settings.openid_configuration.authorization_endpoint)
             .with_query(&AuthCodePayload {
                 client_id: &settings.config.client_id,
-                client_secret: settings.config.client_secret,
                 code_challenge: &pkce.code_challenge,
                 code_challenge_method: &settings.config.code_challenge_method,
                 redirect_uri: &redirect_uri,

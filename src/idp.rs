@@ -15,7 +15,9 @@ pub struct AuthorizeResponse {
 
 #[derive(Serialize)]
 pub struct ExchangePayload<'a> {
-    pub client_id: &'a str,
+    pub client_id: &'a str,    
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<&'a str>,
     pub code: &'a str,
     pub grant_type: &'a str,
     pub redirect_uri: &'a str,
@@ -25,8 +27,6 @@ pub struct ExchangePayload<'a> {
 #[derive(Serialize)]
 pub struct AuthCodePayload<'a> {
     pub client_id: &'a str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_secret: Option<&'a str>,
     pub code_challenge: &'a str,
     pub code_challenge_method: &'a str,
     pub redirect_uri: &'a str,

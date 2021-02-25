@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 const COOKIE_ATTRIBUTES: &str = "Path=/; SameSite=Lax; Secure; HttpOnly";
 
-pub fn parse(cookie_string: &str) -> HashMap<String, String> {
+pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
     cookie_string
         .split("; ")
         .filter_map(|kv| {
             kv.find("=").map(|index| {
                 let (key, value) = kv.split_at(index);
-                let key = key.trim().to_string();
-                let value = value[1..].trim().to_string();
+                let key = key.trim();
+                let value = value[1..].trim();
                 (key, value)
             })
         })

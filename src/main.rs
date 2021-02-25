@@ -18,7 +18,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
     let settings = Config::load();
 
     // Verify any tokens stored as a result of a complete OAuth 2.0 authorization code flow.
-    let cookie = cookies::parse(req.get_header_str("cookie").unwrap_or(""));
+    let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
+    let cookie = cookies::parse(&cookie_header);
+
     if let (Some(access_token), Some(id_token)) =
         (cookie.get("access_token"), cookie.get("id_token"))
     {
@@ -44,9 +46,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
         // Validate the ID token.
         if validate_token_rs256(id_token, &settings).is_err() {
-            return Ok(responses::unauthorized(
-                "ID token invalid. Try again...",
-            ));
+            return Ok(responses::unauthorized("ID token invalid. Try again..."));
         }
 
         // Authorization and authentication successful!
@@ -55,9 +55,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Add an API key;
         req.set_header("x-api-key", "h3ll0fr0mf457lyc0mpu73@3d63");
         // Add a custom header containing the access token;
-        req.set_header("access-token", access_token);
+        req.set_header("access-token", *access_token);
         // Add a custom header containing the ID token;
-        req.set_header("id-token", id_token);
+        req.set_header("id-token", *id_token);
         // Or authenticate using AWS Signature V4: https://github.com/fastly/compute-starter-kit-rust-static-content
 
         // Send the request to the origin backend.

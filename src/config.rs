@@ -54,7 +54,9 @@ pub struct Jwks<'a> {
 pub struct Config {
     #[serde(borrow)]
     pub config: ServiceConfiguration<'static>,
+    #[serde(borrow)]
     pub jwks: Jwks<'static>,
+    #[serde(borrow)]
     pub openid_configuration: OpenIdConfiguration<'static>,
 }
 

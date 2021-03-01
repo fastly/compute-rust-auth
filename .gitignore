@@ -4,3 +4,4 @@
 /bin
 /pkg
 .DS_Store
+.tmp*

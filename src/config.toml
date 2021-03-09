@@ -38,3 +38,8 @@ verify_access_token = true
 # parameter used to maintain state between the request and the callback.
 # Defaults to 10 if omitted.
 # state_parameter_length = 10
+
+# Optional: OAuth 2.0 scope list (one or more space-separated scopes).
+# https://oauth.net/2/scope
+# Defaults to openid if omitted.
+# scope = "openid"

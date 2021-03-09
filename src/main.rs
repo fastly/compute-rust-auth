@@ -109,12 +109,11 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
         // Modify the request before routing to the origin backend, e.g.:
         // Add an API key;
-        req.set_header("x-api-key", "h3ll0fr0mf457lyc0mpu73@3d63");
+        req.set_header("x-api-key", "h3ll0fr0mc0mpu73@3dg3");
         // Add a custom header containing the access token;
-        req.set_header("access-token", *access_token);
+        req.set_header("fastly-access-token", *access_token);
         // Add a custom header containing the ID token;
-        req.set_header("id-token", *id_token);
-        // Or authenticate using AWS Signature V4: https://github.com/fastly/compute-starter-kit-rust-static-content
+        req.set_header("fastly-id-token", *id_token);
 
         // Send the request to the origin backend.
         return Ok(req.send("backend")?);
@@ -140,7 +139,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             code_challenge_method: &settings.config.code_challenge_method,
             redirect_uri: &redirect_uri,
             response_type: "code",
-            scope: "openid",
+            scope: &settings.config.scope,
             state: &base64::encode_config(&state, base64::URL_SAFE_NO_PAD),
         })
         .unwrap();

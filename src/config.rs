@@ -10,6 +10,7 @@ pub struct ServiceConfiguration<'a> {
     pub callback_path: &'a str,
     pub code_challenge_method: &'a str,
     pub state_parameter_length: usize,
+    pub scope: &'a str,
 }
 
 impl Default for ServiceConfiguration<'static> {
@@ -21,7 +22,8 @@ impl Default for ServiceConfiguration<'static> {
             jwt_access_token: false,
             callback_path: "/callback",
             code_challenge_method: "S256",
-            state_parameter_length: 10
+            state_parameter_length: 10,
+            scope: "openid"
         }
     }
 }

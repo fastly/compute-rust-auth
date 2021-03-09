@@ -168,9 +168,9 @@ dependencies = [
 
 [[package]]
 name = "fastly"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b32333410ceb0499e2c98af856a47464231e44e78cbfc4a5c66592c1dd8bd07a"
+checksum = "5ca20e271eada2398e7a3042fdbe1a8daa021e50516f21a24f8db4c94edd020b"
 dependencies = [
  "anyhow",
  "bytes 0.5.6",
@@ -191,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "fastly-macros"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9805cc40e0ce43131c09107bf833af402ab102ed2e0bdd1a7f4d9b8789138229"
+checksum = "f46f7f93d61e27761c23c1b613b130d3e37803df0d472ac70d899a6e0bf98480"
 dependencies = [
  "proc-macro2",
  "quote",

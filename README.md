@@ -3,8 +3,8 @@
 ## Prerequisites
 
 1. Register a new application with your favourite OAuth 2.0, OpenID Connect conformant Identity Provider. Make a note of your tenant client_id and the address of your authorization server.
-1. Save a [local copy](./src/.well-known/openid-configuration.json) of the OpenID Connect discovery metadata associated with the server. You’ll find this at https://{shiny-auth-server.com}/.well-known/openid-configuration
-1. Save a [local copy](./src/.well-known/jwks.json) of the JSON Web Key Set (JWKS) metadata. You’ll find this under the jwks_uri property in the document you just downloaded.
+1. Save a [local copy](./src/well-known/openid-configuration.json) of the OpenID Connect discovery metadata associated with the server. You’ll find this at https://{shiny-auth-server.com}/well-known/openid-configuration
+1. Save a [local copy](./src/well-known/jwks.json) of the JSON Web Key Set (JWKS) metadata. You’ll find this under the jwks_uri property in the document you just downloaded.
 1. Paste the client_id you’ve jotted down earlier into config.toml and deploy a Compute@Edge service. Make a note of where it’s deployed.
 Add https://{my-shiny-service.edgecompute.app}/callback to the list of allowed callback URLs in your Identity Provider’s app configuration.
 

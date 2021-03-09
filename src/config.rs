@@ -66,8 +66,8 @@ impl Config {
     pub fn load() -> Self {
         Self {
             config: toml::from_str(include_str!("config.toml")).unwrap(),
-            jwks: serde_json::from_str(include_str!(".well-known/jwks.json")).unwrap(),
-            openid_configuration: serde_json::from_str(include_str!(".well-known/openid-configuration.json")).unwrap(),
+            jwks: serde_json::from_str(include_str!("well-known/jwks.json")).unwrap(),
+            openid_configuration: serde_json::from_str(include_str!("well-known/openid-configuration.json")).unwrap(),
         }
     }
 }

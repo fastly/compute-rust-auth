@@ -40,8 +40,9 @@ For Compute@Edge starter kits, see the [Fastly Developer Hub](https://developer.
 
 Add `https://{some-funky-words}.edgecompute.app/callback` to the list of allowed callback URLs in your IdP’s app configuration. This allows the authorization server to send the user back to the Compute@Edge service.
 
-
 ## The flow in detail
+
+![Edge authentication flow diagram](https://user-images.githubusercontent.com/12828487/110630682-97b4f700-819d-11eb-9e25-680b2957f52f.png)
 
 1. The user makes a request for a protected resource, but they have no session cookie.
 1. At the edge, this service generates:

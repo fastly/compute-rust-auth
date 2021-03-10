@@ -4,6 +4,8 @@ This is a self-contained Rust implementation 🦀 for [OAuth 2.0](https://oauth.
 
 It includes [JSON Web Token (JWT)](https://oauth.net/2/jwt/) verification, and [access token introspection](https://oauth.net/2/token-introspection/).
 
+![Authentication using Compute@Edge](https://user-images.githubusercontent.com/12828487/110628616-270cdb00-819b-11eb-8510-0600635c5808.png)
+
 Scroll down to view [the flow in more detail](#the-flow-in-detail).
 
 For Compute@Edge starter kits, see the [Fastly Developer Hub](https://developer.fastly.com/solutions/starters/). 

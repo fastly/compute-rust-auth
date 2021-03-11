@@ -40,25 +40,26 @@ pub struct NonceToken {
 }
 
 impl NonceToken {
-    pub fn new(settings: &Config) -> Self {
+    // Computes a HS256 key from the nonce secret.
+    pub fn new(nonce_secret: &str) -> Self {
         Self {
-            // Compute a HS256 key from the nonce secret.
-            auth_key: HS256Key::from_bytes(&Hash::hash(&settings.config.nonce_secret.as_bytes())),
+            auth_key: HS256Key::from_bytes(&Hash::hash(&nonce_secret.as_bytes())),
         }
     }
-
+    // Creates a time-limited token and encodes the passed state within its claims.
+    // Returns a tuple: (token, nonce)
     pub fn generate_from_state(&self, state: &str) -> (String, String) {
-        // Create a time-limited claim with the state as subject.
+        // Create token claims valid for 5 minutes.
         let mut state_and_nonce_claim =
             Claims::create(Duration::from_mins(5)).with_subject(state);
-        // Generate a random value (nonce) used to mitigate OAuth replay attacks.
+        // Generate a random value (nonce) and attach it to the token.
         let nonce = state_and_nonce_claim.create_nonce();
         (
             self.auth_key.authenticate(state_and_nonce_claim).unwrap(),
             nonce,
         )
     }
-
+    // Verifies the token and retrieves its subject claim, a state string.
     pub fn get_claimed_state(&self, state_and_nonce: &str) -> Option<String> {
         match &self
             .auth_key

@@ -35,14 +35,16 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Retrieve the code and state from the query string.
         let qs: CallbackQueryParameters = req.get_query().unwrap();
         // Verify that the state matches what we've stored, and exchange the authorization code for tokens.
-        return match (cookie.get("state"), cookie.get("code_verifier"), qs.state) {
-            (Some(state), Some(code_verifier), state_and_nonce) => {
+        return match (cookie.get("state"), cookie.get("code_verifier")) {
+            (Some(state), Some(code_verifier)) => {
                 // Authenticate the state token returned by the IdP,
                 // and verify that the state we stored matches its subject claim.
-                match NonceToken::new(&settings).get_claimed_state(&state_and_nonce) {
-                    Some(claimed_state) => if state != &claimed_state {
-                        return Ok(responses::unauthorized("State mismatch."));
-                    },
+                match NonceToken::new(&settings.config.nonce_secret).get_claimed_state(&qs.state) {
+                    Some(claimed_state) => {
+                        if state != &claimed_state {
+                            return Ok(responses::unauthorized("State mismatch."));
+                        }
+                    }
                     _ => {
                         return Ok(responses::unauthorized("Could not verify state."));
                     }
@@ -62,8 +64,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 // If the exchange is successful, proceed with the original request.
                 if exchange_res.get_status().is_success() {
                     // Strip the random state from the state cookie value to get the original request.
-                    let original_req = &state
-                        [..(state.len() - settings.config.state_parameter_length)];
+                    let original_req =
+                        &state[..(state.len() - settings.config.state_parameter_length)];
                     // Deserialize the response from the authorize step.
                     let auth = exchange_res.take_body_json::<AuthorizeResponse>().unwrap();
                     // Replay the original request, setting the tokens as cookies.
@@ -136,11 +138,12 @@ fn main(mut req: Request) -> Result<Response, Error> {
         req.get_query_str().unwrap_or(""),
         rand_chars(settings.config.state_parameter_length)
     );
-    // Generate an OpenID Connect nonce, to mitigate replay attacks;
-    // this is a random value with a twist: in is a time limited token (JWT)
-    // that encodes the nonce and the state within its claims. 
-    let (state_and_nonce, nonce) = NonceToken::new(&settings).generate_from_state(&state);
-    
+    // Generate the OpenID Connect nonce, used to mitigate replay attacks.
+    // This is a random value with a twist: in is a time limited token (JWT)
+    // that encodes the nonce and the state within its claims.
+    let (state_and_nonce, nonce) =
+        NonceToken::new(&settings.config.nonce_secret).generate_from_state(&state);
+
     // Build the authorization request.
     let authorize_req = Request::get(settings.openid_configuration.authorization_endpoint)
         .with_query(&AuthCodePayload {

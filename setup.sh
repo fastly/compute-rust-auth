@@ -1,6 +1,19 @@
 #!/bin/bash
-AUTH_SERVER_HOST=dev-0y7s8dkt.us.auth0.com
-TLS_ORIGIN_HOST=httpbin.org
+# AUTH_SERVER_HOST=dev-0y7s8dkt.us.auth0.com
+# TLS_ORIGIN_HOST=httpbin.org
+
+
+echo Hello.  who am I talking to?
+read varname
+
+echo Hello.  who am I talking to?
+read AUTH_SERVER_HOST
+
+echo Hello.  who am I talking to?
+read TLS_ORIGIN_HOST
+
+
+# =dev-0y7s8dkt.us.auth0.com
 
 fastly compute init
 

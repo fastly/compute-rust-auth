@@ -53,7 +53,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                         client_id: &settings.config.client_id,
                         client_secret: settings.config.client_secret,
                         code: &qs.code,
-                        code_verifier: code_verifier,
+                        code_verifier,
                         grant_type: "authorization_code",
                         redirect_uri: &redirect_uri,
                     })

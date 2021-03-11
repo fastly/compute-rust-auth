@@ -2,6 +2,8 @@
 AUTH_SERVER_HOST=dev-0y7s8dkt.us.auth0.com
 TLS_ORIGIN_HOST=httpbin.org
 
+fastly compute init
+
 SERVICE_ID=$(awk -F'[ ="]+' '$1 == "service_id" { print $2 }' fastly.toml)
 VERSION=$(awk -F'[ =]+' '$1 == "version" { print $2 }' fastly.toml)
 NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ print $NF }')

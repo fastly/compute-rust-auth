@@ -6,7 +6,7 @@ pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
     cookie_string
         .split("; ")
         .filter_map(|kv| {
-            kv.find("=").map(|index| {
+            kv.find('=').map(|index| {
                 let (key, value) = kv.split_at(index);
                 let key = key.trim();
                 let value = value[1..].trim();

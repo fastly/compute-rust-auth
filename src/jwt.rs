@@ -24,13 +24,14 @@ pub fn validate_token_rs256(
     let exponent = base64::decode_config(&key_metadata.exponent, base64::URL_SAFE_NO_PAD)?;
     let public_key = RS256PublicKey::from_components(&modulus, &exponent)?;
     // Verify the token's claims.
-    let mut verification_options = VerificationOptions::default();
-    verification_options.allowed_issuers = Some(HashSet::from_strings(&[settings
-        .openid_configuration
-        .issuer]));
-    verification_options.allowed_audiences =
-        Some(HashSet::from_strings(&[settings.config.client_id]));
-    // Custom claims verification is also supported – https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
+    // Custom claims are also supported – see https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
+    let verification_options = VerificationOptions {
+        allowed_issuers: Some(HashSet::from_strings(&[settings
+            .openid_configuration
+            .issuer])),
+        allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
+        ..Default::default()
+    };
     public_key.verify_token::<NoCustomClaims>(&token_string, Some(verification_options))
 }
 
@@ -49,7 +50,7 @@ impl NonceToken {
     pub fn generate_from_state(&self, state: &str) -> (String, String) {
         // Create a time-limited claim with the state as subject.
         let mut state_and_nonce_claim =
-            Claims::create(Duration::from_mins(5)).with_subject(state.clone());
+            Claims::create(Duration::from_mins(5)).with_subject(state);
         // Generate a random value (nonce) used to mitigate OAuth replay attacks.
         let nonce = state_and_nonce_claim.create_nonce();
         (

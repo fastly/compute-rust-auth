@@ -33,4 +33,6 @@ pub struct AuthCodePayload<'a> {
     pub response_type: &'a str,
     pub scope: &'a str,
     pub state: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nonce: Option<&'a str>,
 }

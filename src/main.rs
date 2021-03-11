@@ -123,6 +123,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(&settings.config.code_challenge_method);
+    // Generate a random value (nonce) to mitigate OAuth replay attacks. 
+    let nonce = rand_chars(settings.config.state_parameter_length);
     // Generate the Oauth 2.0 state parameter,
     // adding a nonce to the original request URL to prevent attacks and redirect users.
     let state = format!(
@@ -141,6 +143,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             response_type: "code",
             scope: &settings.config.scope,
             state: &base64::encode_config(&state, base64::URL_SAFE_NO_PAD),
+            nonce: Some(&nonce)
         })
         .unwrap();
     // Redirect to the Identity Provider's login and authorization prompt.

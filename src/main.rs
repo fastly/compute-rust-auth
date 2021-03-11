@@ -151,7 +151,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             response_type: "code",
             scope: &settings.config.scope,
             state: &state_and_nonce,
-            nonce: Some(&nonce),
+            nonce: &nonce,
         })
         .unwrap();
     // Redirect to the Identity Provider's login and authorization prompt.

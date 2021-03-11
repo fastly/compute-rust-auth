@@ -160,7 +160,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             nonce: Some(&nonce)
         })
         .unwrap();
-    // Encrypt the state using the nonce as hash.
+    // Create a message authentication code for the state, using the nonce as key.
     // We'll use this HMAC to store the state into a cookie.
     let hashed_state_bytes = HMAC::mac(&state.as_bytes(),&nonce.as_bytes());
     // Redirect to the Identity Provider's login and authorization prompt.

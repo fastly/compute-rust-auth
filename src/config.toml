@@ -46,4 +46,4 @@ verify_access_token = true
 
 # A secret to verify the OpenID nonce used to mitigate replay attacks.
 # https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
-nonce_secret = "hELL0_Fr0m_7He_eD9e"
+nonce_secret = "P1ck_A_57r0ng_53cr37"

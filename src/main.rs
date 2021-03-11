@@ -39,9 +39,10 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Verify that the state matches what we've stored, and exchange the authorization code for tokens.
         return match (cookie.get("state"), cookie.get("code_verifier")) {
             (Some(state), Some(code_verifier)) => {
-                // Decode the state query string parameter and retrieve the nonce.
+                // Decode the state query string parameter.
                 let decoded_state_bytes = base64::decode_config(qs.state, base64::URL_SAFE_NO_PAD)?;
                 let decoded_state = str::from_utf8(&decoded_state_bytes).unwrap();
+                // Retrieve the nonce.
                 let nonce =
                     &decoded_state[(decoded_state.len() - settings.config.state_parameter_length)..];
                 let hashed_state_bytes = HMAC::mac(&decoded_state_bytes, &nonce.as_bytes());

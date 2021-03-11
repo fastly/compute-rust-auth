@@ -28,7 +28,7 @@ pub fn validate_token_rs256(
                 .issuer]));
             verification_options.allowed_audiences =
                 Some(HashSet::from_strings(&[settings.config.client_id]));
-
+            // Custom claims verification is also supported – https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
             public_key.verify_token::<NoCustomClaims>(&token_string, Some(verification_options))
         }
         _ => bail!("Invalid public key."),

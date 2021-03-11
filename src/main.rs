@@ -8,10 +8,10 @@ mod responses;
 use config::Config;
 use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
+use hmac_sha256::HMAC;
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
 use jwt::validate_token_rs256;
 use pkce::{rand_chars, Pkce};
-use hmac_sha256::HMAC;
 use std::str;
 
 #[fastly::main]
@@ -43,11 +43,11 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 let decoded_state_bytes = base64::decode_config(qs.state, base64::URL_SAFE_NO_PAD)?;
                 let decoded_state = str::from_utf8(&decoded_state_bytes).unwrap();
                 // Retrieve the nonce.
-                let nonce =
-                    &decoded_state[(decoded_state.len() - settings.config.state_parameter_length)..];
+                let nonce = &decoded_state
+                    [(decoded_state.len() - settings.config.state_parameter_length)..];
                 let hashed_state_bytes = HMAC::mac(&decoded_state_bytes, &nonce.as_bytes());
                 // Compare the state cookie to the hashed query string state.
-                if state.as_bytes() != hashed_state_bytes {
+                if state != &base64::encode_config(hashed_state_bytes, base64::URL_SAFE_NO_PAD) {
                     return Ok(responses::unauthorized(
                         "State parameter mismatch. Try again...",
                     ));
@@ -67,8 +67,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 // If the exchange is successful, proceed with the original request.
                 if exchange_res.get_status().is_success() {
                     // Strip the random state from the state cookie value to get the original request.
-                    let original_req =
-                        &decoded_state[..(decoded_state.len() - settings.config.state_parameter_length)];
+                    let original_req = &decoded_state
+                        [..(decoded_state.len() - settings.config.state_parameter_length)];
                     // Deserialize the response from the authorize step.
                     let auth = exchange_res.take_body_json::<AuthorizeResponse>().unwrap();
                     // Replay the original request, setting the tokens as cookies.
@@ -85,7 +85,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 }
             }
             _ => Ok(responses::unauthorized(
-                "State parameter mismatch. Try again...",
+                "State cookies not found. Try again...",
             )),
         };
     }
@@ -137,7 +137,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(&settings.config.code_challenge_method);
-    // Generate a random value (nonce) to mitigate OAuth replay attacks. 
+    // Generate a random value (nonce) to mitigate OAuth replay attacks.
     let nonce = rand_chars(settings.config.state_parameter_length);
     // Generate the Oauth 2.0 state parameter, used to prevent CSRF attacks,
     // by adding the nonce and a random string to the original request URL.
@@ -157,18 +157,21 @@ fn main(mut req: Request) -> Result<Response, Error> {
             response_type: "code",
             scope: &settings.config.scope,
             state: &base64::encode_config(&state, base64::URL_SAFE_NO_PAD),
-            nonce: Some(&nonce)
+            nonce: Some(&nonce),
         })
         .unwrap();
     // Create a message authentication code for the state, using the nonce as key.
     // We'll use this HMAC to store the state into a cookie.
-    let hashed_state_bytes = HMAC::mac(&state.as_bytes(),&nonce.as_bytes());
+    let hashed_state_bytes = HMAC::mac(&state.as_bytes(), &nonce.as_bytes());
     // Redirect to the Identity Provider's login and authorization prompt.
     Ok(responses::temporary_redirect(
         authorize_req.get_url_str(),
         cookies::expired("access_token"),
         cookies::expired("id_token"),
         cookies::session("code_verifier", &pkce.code_verifier),
-        cookies::session("state", str::from_utf8(&hashed_state_bytes).unwrap())
+        cookies::session(
+            "state",
+            &base64::encode_config(&hashed_state_bytes, base64::URL_SAFE_NO_PAD),
+        ),
     ))
 }

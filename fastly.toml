@@ -1,6 +1,6 @@
 version = 6
-name = "compute-rust-auth-experiment"
-description = "Authentication at the edge with OAuth 2.0, PKCE, and OpenID Connect"
-authors = ["Dora Militaru <dmilitaru@fastly.com>"]
+name = "toktok"
+description = "toktok"
+authors = ["fastly@pureftpd.org"]
 language = "rust"
-service_id = "3L4gguzoPrHPd6wkqvSLCp"
+service_id = "1q8BCEpqp1F0atRXzoHyJo"

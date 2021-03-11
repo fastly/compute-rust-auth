@@ -10,6 +10,7 @@ use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
 use jwt::validate_token_rs256;
+use jwt_simple::prelude::*;
 use pkce::{rand_chars, Pkce};
 
 #[fastly::main]
@@ -35,9 +36,18 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Retrieve the code and state from the query string.
         let qs: CallbackQueryParameters = req.get_query().unwrap();
         return match (cookie.get("state"), cookie.get("code_verifier")) {
-            (Some(state), Some(code_verifier))
-                if base64::encode_config(state, base64::URL_SAFE_NO_PAD) == qs.state =>
-            {
+            (Some(state), Some(code_verifier)) => {
+                let state_and_nonce = qs.state;
+                let nonce_auth_key = HS256Key::from_bytes(
+                    &base64::decode(settings.config.nonces_auth_secret).unwrap(),
+                );
+                let state_and_nonce_claim =
+                    nonce_auth_key.verify_token::<NoCustomClaims>(&state_and_nonce, None)?;
+                let claimed_state = state_and_nonce_claim.subject.unwrap();
+                if state != &claimed_state {
+                    return Ok(responses::unauthorized("state mismatch"));
+                }
+
                 // Exchange the authorization code for tokens.
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
@@ -123,8 +133,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(&settings.config.code_challenge_method);
-    // Generate a random value (nonce) to mitigate OAuth replay attacks. 
-    let nonce = rand_chars(settings.config.state_parameter_length);
+
     // Generate the Oauth 2.0 state parameter,
     // adding a nonce to the original request URL to prevent attacks and redirect users.
     let state = format!(
@@ -133,6 +142,15 @@ fn main(mut req: Request) -> Result<Response, Error> {
         req.get_query_str().unwrap_or(""),
         rand_chars(settings.config.state_parameter_length)
     );
+
+    // Generate a random value (nonce) to mitigate OAuth replay attacks.
+    let nonce_auth_key =
+        HS256Key::from_bytes(&base64::decode(settings.config.nonces_auth_secret).unwrap());
+    let mut state_and_nonce_claim =
+        Claims::create(Duration::from_mins(5)).with_subject(state.clone());
+    let nonce = state_and_nonce_claim.create_nonce();
+    let state_and_nonce = nonce_auth_key.authenticate(state_and_nonce_claim).unwrap();
+
     // Build the authorization request.
     let authorize_req = Request::get(settings.openid_configuration.authorization_endpoint)
         .with_query(&AuthCodePayload {
@@ -142,8 +160,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
             redirect_uri: &redirect_uri,
             response_type: "code",
             scope: &settings.config.scope,
-            state: &base64::encode_config(&state, base64::URL_SAFE_NO_PAD),
-            nonce: Some(&nonce)
+            state: &state_and_nonce,
+            nonce: Some(&nonce),
         })
         .unwrap();
     // Redirect to the Identity Provider's login and authorization prompt.

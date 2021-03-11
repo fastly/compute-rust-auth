@@ -43,3 +43,6 @@ verify_access_token = true
 # https://oauth.net/2/scope
 # Defaults to openid if omitted.
 # scope = "openid"
+
+# 256-bit based64-encoded secret to verify nonces
+nonces_auth_secret = "QPGW4Dfyq9JYbjs6P03Fy2X4DOgn0YUc4SttlRSuzQs="

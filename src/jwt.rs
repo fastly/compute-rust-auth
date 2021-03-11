@@ -2,7 +2,7 @@ use crate::config::Config;
 use fastly::Error;
 use jwt_simple::prelude::*;
 
-// Validates a JWT signed with RS256, and verifies its claims. 
+// Validates a JWT signed with RS256, and verifies its claims.
 pub fn validate_token_rs256(
     token_string: &str,
     settings: &Config,

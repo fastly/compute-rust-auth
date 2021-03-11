@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(default)]
@@ -11,6 +11,7 @@ pub struct ServiceConfiguration<'a> {
     pub code_challenge_method: &'a str,
     pub state_parameter_length: usize,
     pub scope: String,
+    pub nonces_auth_secret: &'a str,
 }
 
 impl Default for ServiceConfiguration<'static> {
@@ -24,6 +25,7 @@ impl Default for ServiceConfiguration<'static> {
             code_challenge_method: "S256",
             state_parameter_length: 10,
             scope: "openid".to_string(),
+            nonces_auth_secret: "",
         }
     }
 }
@@ -67,7 +69,10 @@ impl Config {
         Self {
             config: toml::from_str(include_str!("config.toml")).unwrap(),
             jwks: serde_json::from_str(include_str!("well-known/jwks.json")).unwrap(),
-            openid_configuration: serde_json::from_str(include_str!("well-known/openid-configuration.json")).unwrap(),
+            openid_configuration: serde_json::from_str(include_str!(
+                "well-known/openid-configuration.json"
+            ))
+            .unwrap(),
         }
     }
 }

@@ -1,6 +1,6 @@
 # Required: OAuth 2.0 Client Identifier valid at the Authorization Server.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1
-client_id = "y0ur_1dp_cl13n7_1d"
+client_id = "m0dfcl4aX3qshMnXrng67qGHZBS9mJ1z"
 
 # Optional: Whether to verify the access token using the OpenID userinfo endpoint.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.3

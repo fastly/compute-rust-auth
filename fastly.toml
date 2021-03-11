@@ -1,5 +1,6 @@
-manifest_version = "0.1.0"
-name = "compute-rust-auth"
+version = 5
+name = "compute-rust-auth-experiment"
 description = "Authentication at the edge with OAuth 2.0, PKCE, and OpenID Connect"
 authors = ["Dora Militaru <dmilitaru@fastly.com>"]
 language = "rust"
+service_id = "3L4gguzoPrHPd6wkqvSLCp"

@@ -6,10 +6,12 @@ SERVICE_ID=$(awk -F'[ ="]+' '$1 == "service_id" { print $2 }' fastly.toml)
 VERSION=$(awk -F'[ =]+' '$1 == "version" { print $2 }' fastly.toml)
 NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ print $NF }')
 
+mkdir -p src/well-known
+
 # Download the OpenID Connect well-known metadata. 
 getWellKnown() {
     # Download the OpenID Configuration metadata. 
-    curl -L -X GET https://$AUTH_SERVER_HOST/well-known/openid-configuration | tr -d "[:space:]" > src/well-known/openid-configuration.json
+    curl -L -X GET https://$AUTH_SERVER_HOST/.well-known/openid-configuration | tr -d "[:space:]" > src/well-known/openid-configuration.json
     # Parse the JSON Web Key URI.
     JWKS_URI=$(sed 's|.*"jwks_uri":"\([^"]*\).*|\1|' src/well-known/openid-configuration.json)
     # Download the JWKS metadata. 
@@ -23,6 +25,8 @@ createTlsBackend() {
         --use-ssl --ssl-check-cert
 }
 
+getWellKnown
+
 # Identity Provider backend
 createTlsBackend $SERVICE_ID $NEXT_VERSION idp $AUTH_SERVER_HOST
 
@@ -32,4 +36,3 @@ createTlsBackend $SERVICE_ID $NEXT_VERSION backend $TLS_ORIGIN_HOST
 # Activate
 fastly service-version activate --service-id=$SERVICE_ID --version=$(($NEXT_VERSION+0))
 
-getWellKnown

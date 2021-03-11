@@ -1,5 +1,5 @@
 use crate::cookies;
-use fastly::http::{StatusCode, header::SET_COOKIE};
+use fastly::http::{header::SET_COOKIE, StatusCode};
 use fastly::{Body, Response};
 
 pub fn unauthorized(body: impl Into<Body>) -> Response {

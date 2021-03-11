@@ -8,11 +8,10 @@ mod responses;
 use config::Config;
 use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
-use hmac_sha256::HMAC;
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
-use jwt::validate_token_rs256;
+use jwt::{validate_token_rs256, NonceToken};
+use jwt_simple::prelude::*;
 use pkce::{rand_chars, Pkce};
-use std::str;
 
 #[fastly::main]
 fn main(mut req: Request) -> Result<Response, Error> {
@@ -37,21 +36,17 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Retrieve the code and state from the query string.
         let qs: CallbackQueryParameters = req.get_query().unwrap();
         // Verify that the state matches what we've stored, and exchange the authorization code for tokens.
-        return match (cookie.get("state"), cookie.get("code_verifier")) {
-            (Some(state), Some(code_verifier)) => {
-                // Decode the state query string parameter.
-                let decoded_state_bytes = base64::decode_config(qs.state, base64::URL_SAFE_NO_PAD)?;
-                let decoded_state = str::from_utf8(&decoded_state_bytes).unwrap();
-                // Retrieve the nonce.
-                let nonce = &decoded_state
-                    [(decoded_state.len() - settings.config.state_parameter_length)..];
-                let hashed_state_bytes = HMAC::mac(&decoded_state_bytes, &nonce.as_bytes());
-                // Compare the state cookie to the hashed query string state.
-                if state != &base64::encode_config(hashed_state_bytes, base64::URL_SAFE_NO_PAD) {
-                    return Ok(responses::unauthorized(
-                        "State parameter mismatch. Try again...",
-                    ));
-                }
+        return match (cookie.get("state"), cookie.get("code_verifier"), qs.state) {
+            (Some(state), Some(code_verifier), state_and_nonce) => {
+                match NonceToken::new(&settings).get_claimed_state(&state_and_nonce) {
+                    Some(claimed_state) => if state != &claimed_state {
+                        return Ok(responses::unauthorized("State mismatch."));
+                    },
+                    _ => {
+                        return Ok(responses::unauthorized("Could not verify state."));
+                    }
+                };
+
                 // Exchange the authorization code for tokens.
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
@@ -67,8 +62,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 // If the exchange is successful, proceed with the original request.
                 if exchange_res.get_status().is_success() {
                     // Strip the random state from the state cookie value to get the original request.
-                    let original_req = &decoded_state
-                        [..(decoded_state.len() - settings.config.state_parameter_length)];
+                    let original_req = &state
+                        [..(state.len() - settings.config.state_parameter_length)];
                     // Deserialize the response from the authorize step.
                     let auth = exchange_res.take_body_json::<AuthorizeResponse>().unwrap();
                     // Replay the original request, setting the tokens as cookies.
@@ -84,9 +79,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     Ok(responses::unauthorized(exchange_res.take_body()))
                 }
             }
-            _ => Ok(responses::unauthorized(
-                "State cookies not found. Try again...",
-            )),
+            _ => Ok(responses::unauthorized("State cookies not found.")),
         };
     }
 
@@ -109,14 +102,12 @@ fn main(mut req: Request) -> Result<Response, Error> {
         } else if settings.config.jwt_access_token
             && validate_token_rs256(access_token, &settings).is_err()
         {
-            return Ok(responses::unauthorized(
-                "JWT access token invalid. Try again...",
-            ));
+            return Ok(responses::unauthorized("JWT access token invalid."));
         }
 
         // Validate the ID token.
         if validate_token_rs256(id_token, &settings).is_err() {
-            return Ok(responses::unauthorized("ID token invalid. Try again..."));
+            return Ok(responses::unauthorized("ID token invalid."));
         }
 
         // Authorization and authentication successful!
@@ -137,16 +128,19 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(&settings.config.code_challenge_method);
-    // Generate a random value (nonce) to mitigate OAuth replay attacks.
-    let nonce = rand_chars(settings.config.state_parameter_length);
-    // Generate the Oauth 2.0 state parameter, used to prevent CSRF attacks,
-    // by adding the nonce and a random string to the original request URL.
+
+    // Generate the Oauth 2.0 state parameter,
+    // adding a nonce to the original request URL to prevent attacks and redirect users.
     let state = format!(
         "{}{}{}",
         req.get_path(),
         req.get_query_str().unwrap_or(""),
-        &nonce
+        rand_chars(settings.config.state_parameter_length)
     );
+
+    // TODO: A better comment
+    let (state_and_nonce, nonce) = NonceToken::new(&settings).generate_from_state(&state);
+    
     // Build the authorization request.
     let authorize_req = Request::get(settings.openid_configuration.authorization_endpoint)
         .with_query(&AuthCodePayload {
@@ -156,22 +150,16 @@ fn main(mut req: Request) -> Result<Response, Error> {
             redirect_uri: &redirect_uri,
             response_type: "code",
             scope: &settings.config.scope,
-            state: &base64::encode_config(&state, base64::URL_SAFE_NO_PAD),
+            state: &state_and_nonce,
             nonce: Some(&nonce),
         })
         .unwrap();
-    // Create a message authentication code for the state, using the nonce as key.
-    // We'll use this HMAC to store the state into a cookie.
-    let hashed_state_bytes = HMAC::mac(&state.as_bytes(), &nonce.as_bytes());
     // Redirect to the Identity Provider's login and authorization prompt.
     Ok(responses::temporary_redirect(
         authorize_req.get_url_str(),
         cookies::expired("access_token"),
         cookies::expired("id_token"),
         cookies::session("code_verifier", &pkce.code_verifier),
-        cookies::session(
-            "state",
-            &base64::encode_config(&hashed_state_bytes, base64::URL_SAFE_NO_PAD),
-        ),
+        cookies::session("state", &state),
     ))
 }

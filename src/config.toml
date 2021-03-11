@@ -43,3 +43,7 @@ verify_access_token = true
 # https://oauth.net/2/scope
 # Defaults to openid if omitted.
 # scope = "openid"
+
+# A secret to verify the OpenID nonce used to mitigate replay attacks.
+# https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
+nonce_secret = "hELL0_Fr0m_7He_eD9e"

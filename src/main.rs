@@ -89,7 +89,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     if let (Some(access_token), Some(id_token)) =
         (cookie.get("access_token"), cookie.get("id_token"))
     {
-        if settings.config.verify_access_token {
+        if settings.config.introspect_access_token {
             // Validate the access token using the OpenID userinfo endpoint;
             // bearer authentication supports opaque, JWT and other token types (PASETO, Hawk),
             // depending on your Identity Provider configuration.

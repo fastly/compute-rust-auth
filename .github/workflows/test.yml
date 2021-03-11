@@ -49,6 +49,9 @@ jobs:
     - name: audit
       run: cargo audit
       shell: bash
+    - name: Pre-build steps
+      run: curl -sLX GET https://accounts.google.com/.well-known/openid-configuration > ~/src/well-known/openid-configuration.json && curl -sLX GET https://www.googleapis.com/oauth2/v3/certs > ~/src/well-known/jwks.json
+      shell: bash
     - name: build
       run: cargo build
       shell: bash

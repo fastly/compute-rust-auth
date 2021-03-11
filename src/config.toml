@@ -1,22 +1,20 @@
-# [REQUIRED] OAuth 2.0 Client Identifier valid at the Authorization Server.
+# [REQUIRED] OAuth 2.0 client identifier valid at the authorization server.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1
-client_id = "m0dfcl4aX3qshMnXrng67qGHZBS9mJ1z"
+client_id = "YOUR_OAUTH_CLIENT_ID"
 
 # [REQUIRED] A secret to verify the OpenID nonce used to mitigate replay attacks.
 # https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
 # It must be sufficiently random to not be guessable.
-# Tip: Take a random 256-bit value and convert it to a hexadecimal representation,
-# by running: dd if=/dev/random bs=32 count=1 | base64
 nonce_secret = "P1ck_A_57r0ng_53cr37"
 
 # [OPTIONAL] Whether to verify the access token using the OpenID userinfo endpoint.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.3
-# Used to verify opaque and other types of tokens revocable by the Authorization Server.
-# If revocation is not a concern, or when faced with Identity Provider rate limitations,
-# JWT access tokens may be validated at the edge, using an approach similar to ID tokens.
+# Used to introspect opaque and other types of tokens revocable by the authorization server.
+# If revocation is not a concern – or when IdP rate limits are –
+# comment out this option to validate JWT access tokens at the edge.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.16.8
 # Defaults to false if omitted.
-verify_access_token = true
+introspect_access_token = true
 
 # [OPTIONAL] Whether the access token is a JWT.
 # https://tools.ietf.org/html/rfc7519

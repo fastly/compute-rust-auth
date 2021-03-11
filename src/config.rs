@@ -5,7 +5,7 @@ use serde::Deserialize;
 pub struct ServiceConfiguration<'a> {
     pub client_id: &'a str,
     pub client_secret: Option<&'a str>,
-    pub verify_access_token: bool,
+    pub introspect_access_token: bool,
     pub jwt_access_token: bool,
     pub callback_path: &'a str,
     pub code_challenge_method: &'a str,
@@ -19,7 +19,7 @@ impl Default for ServiceConfiguration<'static> {
         Self {
             client_id: "",
             client_secret: None,
-            verify_access_token: false,
+            introspect_access_token: false,
             jwt_access_token: false,
             callback_path: "/callback",
             code_challenge_method: "S256",

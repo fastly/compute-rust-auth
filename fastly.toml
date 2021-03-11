@@ -1,4 +1,4 @@
-version = 5
+version = 6
 name = "compute-rust-auth-experiment"
 description = "Authentication at the edge with OAuth 2.0, PKCE, and OpenID Connect"
 authors = ["Dora Militaru <dmilitaru@fastly.com>"]

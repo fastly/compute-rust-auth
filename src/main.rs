@@ -43,7 +43,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 let decoded_state_bytes = base64::decode_config(qs.state, base64::URL_SAFE_NO_PAD)?;
                 let decoded_state = str::from_utf8(&decoded_state_bytes).unwrap();
                 let nonce =
-                    &decoded_state[..(decoded_state.len() - settings.config.state_parameter_length)];
+                    &decoded_state[(decoded_state.len() - settings.config.state_parameter_length)..];
                 let hashed_state_bytes = HMAC::mac(&decoded_state_bytes, &nonce.as_bytes());
                 // Compare the state cookie to the hashed query string state.
                 if state.as_bytes() != hashed_state_bytes {

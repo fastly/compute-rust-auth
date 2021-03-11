@@ -10,7 +10,6 @@ use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
 use jwt::{validate_token_rs256, NonceToken};
-use jwt_simple::prelude::*;
 use pkce::{rand_chars, Pkce};
 
 #[fastly::main]
@@ -38,6 +37,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
         // Verify that the state matches what we've stored, and exchange the authorization code for tokens.
         return match (cookie.get("state"), cookie.get("code_verifier"), qs.state) {
             (Some(state), Some(code_verifier), state_and_nonce) => {
+                // Authenticate the state token returned by the IdP,
+                // and verify that the state we stored matches its subject claim.
                 match NonceToken::new(&settings).get_claimed_state(&state_and_nonce) {
                     Some(claimed_state) => if state != &claimed_state {
                         return Ok(responses::unauthorized("State mismatch."));
@@ -46,7 +47,6 @@ fn main(mut req: Request) -> Result<Response, Error> {
                         return Ok(responses::unauthorized("Could not verify state."));
                     }
                 };
-
                 // Exchange the authorization code for tokens.
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
@@ -128,17 +128,17 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(&settings.config.code_challenge_method);
-
-    // Generate the Oauth 2.0 state parameter,
-    // adding a nonce to the original request URL to prevent attacks and redirect users.
+    // Generate the OAuth 2.0 state parameter, used to prevent CSRF attacks,
+    // and store the original request path and query string.
     let state = format!(
         "{}{}{}",
         req.get_path(),
         req.get_query_str().unwrap_or(""),
         rand_chars(settings.config.state_parameter_length)
     );
-
-    // TODO: A better comment
+    // Generate an OpenID Connect nonce, to mitigate replay attacks;
+    // this is a random value with a twist: in is a time limited token (JWT)
+    // that encodes the nonce and the state within its claims. 
     let (state_and_nonce, nonce) = NonceToken::new(&settings).generate_from_state(&state);
     
     // Build the authorization request.

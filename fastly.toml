@@ -1,0 +1,5 @@
+manifest_version = 1
+name = "compute-rust-auth"
+description = "Authentication at the edge with OAuth 2.0 and OpenID Connect"
+authors = ["Dora Militaru <dmilitaru@fastly.com>"]
+language = "rust"

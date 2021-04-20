@@ -1,13 +1,14 @@
 use crate::config::Config;
 use fastly::Error;
 use hmac_sha256::Hash;
+use serde::{de::DeserializeOwned, Serialize};
 use jwt_simple::prelude::*;
 
 // Validates a JWT signed with RS256, and verifies its claims.
-pub fn validate_token_rs256(
+pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     token_string: &str,
     settings: &Config,
-) -> Result<JWTClaims<NoCustomClaims>, Error> {
+) -> Result<JWTClaims<CustomClaims>, Error> {
     // Peek at the token metadata before verification and retrieve the key identifier,
     // in order to pick the right key out of the JWK set.
     let metadata = Token::decode_metadata(&token_string)?;
@@ -32,7 +33,7 @@ pub fn validate_token_rs256(
         allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
         ..Default::default()
     };
-    public_key.verify_token::<NoCustomClaims>(&token_string, Some(verification_options))
+    public_key.verify_token::<CustomClaims>(&token_string, Some(verification_options))
 }
 
 pub struct NonceToken {

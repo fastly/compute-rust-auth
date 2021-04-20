@@ -9,6 +9,7 @@ use config::Config;
 use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
+use jwt_simple::claims::NoCustomClaims;
 use jwt::{validate_token_rs256, NonceToken};
 use pkce::{rand_chars, Pkce};
 
@@ -102,13 +103,13 @@ fn main(mut req: Request) -> Result<Response, Error> {
             }
         // Validate the JWT access token.
         } else if settings.config.jwt_access_token
-            && validate_token_rs256(access_token, &settings).is_err()
+            && validate_token_rs256::<NoCustomClaims>(access_token, &settings).is_err()
         {
             return Ok(responses::unauthorized("JWT access token invalid."));
         }
 
         // Validate the ID token.
-        if validate_token_rs256(id_token, &settings).is_err() {
+        if validate_token_rs256::<NoCustomClaims>(id_token, &settings).is_err() {
             return Ok(responses::unauthorized("ID token invalid."));
         }
 

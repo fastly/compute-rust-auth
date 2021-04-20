@@ -7,6 +7,7 @@ jobs:
         rust-toolchain: [1.49.0]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
+    environment: test
     steps:
     - name: Checkout code
       uses: actions/checkout@v1
@@ -40,8 +41,14 @@ jobs:
     - name: Install audit
       run: cargo install cargo-audit
       shell: bash 
-    - name: Download OIDC metadata
-      run: mkdir -p ~/src/well-known && curl -sLX GET https://accounts.google.com/.well-known/openid-configuration > ~/src/well-known/openid-configuration.json && curl -sLX GET https://www.googleapis.com/oauth2/v3/certs > ~/src/well-known/jwks.json
+    - name: Prepare to store metadata
+      run: mkdir -p src/well-known
+      shell: bash
+    - name: Store JWKS metadata
+      run: echo "${{ secrets.JWKS_JSON }}" > src/well-known/jwks.json
+      shell: bash    
+    - name: Store OIDC metadata
+      run: echo "${{ secrets.OIDC_METADATA_JSON }}" > src/well-known/openid-configuration.json
       shell: bash
     - name: fmt
       run: cargo fmt
@@ -55,4 +62,3 @@ jobs:
     - name: build
       run: cargo build
       shell: bash
-      

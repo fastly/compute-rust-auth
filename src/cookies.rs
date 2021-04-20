@@ -9,7 +9,7 @@ pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
         .filter_map(|kv| {
             kv.find('=').map(|index| {
                 let (key, value) = kv.split_at(index);
-                let key = key.trim();
+                let mut key = key.trim();
                 if key.starts_with(&COOKIE_PREFIX) {
                     key = &key[..(key.len() - COOKIE_PREFIX.len())];
                 }

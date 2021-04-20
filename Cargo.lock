@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "compute-rust-auth"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64",
  "fastly",
@@ -206,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "fastly"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca20e271eada2398e7a3042fdbe1a8daa021e50516f21a24f8db4c94edd020b"
+checksum = "b902d81a7be2a0bfc504bf82e5f28db32da16c390e4a40660b66fa9ba0d21012"
 dependencies = [
  "anyhow",
  "bytes 0.5.6",
@@ -218,7 +218,6 @@ dependencies = [
  "fastly-sys",
  "http",
  "lazy_static",
- "log",
  "mime",
  "serde",
  "serde_json",
@@ -251,9 +250,9 @@ dependencies = [
 
 [[package]]
 name = "fastly-sys"
-version = "0.3.8"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d737b5a765b8d09647911dd4d5f75695d290bcdc165103dbeaea189cea837bd"
+checksum = "1a62f76ee7ad35f28e2e2b84a36dd6f1781dd61a139151f3550bd539714b22f0"
 dependencies = [
  "fastly-shared",
 ]
@@ -346,9 +345,9 @@ dependencies = [
 
 [[package]]
 name = "hmac-sha256"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "219d368c625166098039429766941449ebf303da35d642eb339503a2bdad3423"
+checksum = "bcdc571e566521512579aab40bf807c5066e1765fb36857f16ed7595c13567c6"
 dependencies = [
  "digest",
 ]
@@ -756,18 +755,18 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "serde"
-version = "1.0.124"
+version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd761ff957cb2a45fbb9ab3da6512de9de55872866160b23c25f1a841e99d29f"
+checksum = "558dc50e1a5a5fa7112ca2ce4effcb321b0300c0d4ccf0776a9f60cd89031171"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.124"
+version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1800f7693e94e186f5e25a28291ae1570da908aff7d97a095dec1e56ff99069b"
+checksum = "b093b7a2bb58203b5da3056c05b4ec1fed827dcfdb37347a8841695263b3d06d"
 dependencies = [
  "proc-macro2",
  "quote",

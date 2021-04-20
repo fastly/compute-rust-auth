@@ -8,7 +8,7 @@ It includes [JSON Web Token (JWT)](https://oauth.net/2/jwt/) verification, and [
 
 Scroll down to view [the flow in more detail](#the-flow-in-detail).
 
-For Compute@Edge starter kits, visit the [Fastly Developer Hub](https://developer.fastly.com/solutions/starters/). 
+Read [the blog post](https://www.fastly.com/blog/simplifying-authentication-with-oauth-at-the-edge) to learn why this is a good idea. For Compute@Edge starter kits, visit the [Fastly Developer Hub](https://developer.fastly.com/solutions/starters/). 
 
 ---
 
@@ -85,7 +85,7 @@ Add `https://{some-funky-words}.edgecompute.app/callback` to the list of allowed
 
 ## The flow in detail
 
-![Edge authentication flow diagram](https://user-images.githubusercontent.com/12828487/111877650-1c70f380-899c-11eb-98ba-427e4006f58a.png)
+![Edge authentication flow diagram](https://user-images.githubusercontent.com/12828487/115379253-4438be80-a1c9-11eb-81af-9470e324434a.png)
 
 1. The user makes a request for a protected resource, but they have no session cookie.
 1. At the edge, this service generates:

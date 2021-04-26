@@ -80,13 +80,13 @@ fastly compute deploy
 printInGreen "All set! Let's create the backends for your origin and the authorization server."
 
 SERVICE_ID=$(awk -F'[ ="]+' '$1 == "service_id" { print $2 }' fastly.toml)
-VERSION=$(awk -F'[ =]+' '$1 == "version" { print $2 }' fastly.toml)
+VERSION=$(awk -F'[ =]+' '$1 == "manifest_version" { print $2 }' fastly.toml)
 
 echo -e "
 
 👩‍💻 Running \033[1mfastly service-version clone --service-id=$SERVICE_ID --version=$VERSION\033[0m
 "
-NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ print $NF }')
+NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ printf $NF }')
 
 createTlsBackend() {
     echo -e "

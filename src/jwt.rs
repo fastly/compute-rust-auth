@@ -12,7 +12,10 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     // Peek at the token metadata before verification and retrieve the key identifier,
     // in order to pick the right key out of the JWK set.
     let metadata = Token::decode_metadata(&token_string)?;
-    let key_id = metadata.key_id().unwrap();
+    let key_id = match metadata.key_id() {
+        None => return Err(Error::msg("decode_metadata returned None")),
+        Some(value) => value
+    };
     // Match the public key id for the JSON web key.
     let key_metadata = settings
         .jwks

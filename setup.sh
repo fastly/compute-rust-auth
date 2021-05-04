@@ -80,7 +80,7 @@ fastly compute deploy
 printInGreen "All set! Let's create the backends for your origin and the authorization server."
 
 SERVICE_ID=$(awk -F'[ ="]+' '$1 == "service_id" { print $2 }' fastly.toml)
-VERSION=$(awk -F'[ =]+' '$1 == "version" { print $2 }' fastly.toml)
+VERSION=$(fastly service-version list --service-id=$SERVICE_ID | awk '/true/{ printf $1 }')
 
 echo -e "
 

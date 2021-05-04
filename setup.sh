@@ -86,7 +86,7 @@ echo -e "
 
 👩‍💻 Running \033[1mfastly service-version clone --service-id=$SERVICE_ID --version=$VERSION\033[0m
 "
-NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ printf $NF }')
+NEXT_VERSION=$(fastly service-version clone --service-id=$SERVICE_ID --version=$VERSION | awk '{ printf "%s", $NF }')
 
 createTlsBackend() {
     echo -e "

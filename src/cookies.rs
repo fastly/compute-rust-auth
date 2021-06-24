@@ -9,10 +9,7 @@ pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
         .filter_map(|kv| {
             kv.find('=').map(|index| {
                 let (key, value) = kv.split_at(index);
-                let mut key = key.trim();
-                if key.starts_with(&COOKIE_PREFIX) {
-                    key = &key[..(key.len() - COOKIE_PREFIX.len())];
-                }
+                let key = key.trim().trim_start_matches(COOKIE_PREFIX);
                 let value = value[1..].trim();
                 (key, value)
             })
@@ -22,7 +19,7 @@ pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
 
 pub fn persistent(name: &str, value: &str, max_age: u32) -> String {
     format!(
-        "{}-{}={}; Max-Age={}; {}",
+        "{}{}={}; Max-Age={}; {}",
         COOKIE_PREFIX, name, value, max_age, COOKIE_ATTRIBUTES
     )
 }
@@ -33,7 +30,7 @@ pub fn expired(name: &str) -> String {
 
 pub fn session(name: &str, value: &str) -> String {
     format!(
-        "{}-{}={}; {}",
+        "{}{}={}; {}",
         COOKIE_PREFIX, name, value, COOKIE_ATTRIBUTES
     )
 }

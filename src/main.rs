@@ -72,8 +72,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     // Replay the original request, setting the tokens as cookies.
                     Ok(responses::temporary_redirect(
                         original_req,
-                        cookies::session("access_token", &auth.access_token),
-                        cookies::session("id_token", &auth.id_token),
+                        cookies::persistent("access_token", &auth.access_token, auth.expires_in),
+                        cookies::persistent("id_token", &auth.id_token, auth.expires_in),
                         cookies::expired("code_verifier"),
                         cookies::expired("state"),
                     ))

@@ -130,15 +130,24 @@ fn main(mut req: Request) -> Result<Response, Error> {
     // Otherwise, start the OAuth 2.0 authorization code flow.
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
-    let pkce = Pkce::new(&settings.config.code_challenge_method);
+    let pkce = Pkce::new(settings.config.code_challenge_method);
     // Generate the OAuth 2.0 state parameter, used to prevent CSRF attacks,
     // and store the original request path and query string.
-    let state = format!(
-        "{}{}{}",
-        req.get_path(),
-        req.get_query_str().unwrap_or(""),
-        rand_chars(settings.config.state_parameter_length)
-    );
+    let state = {
+        let path = req.get_path();
+        let (sep, query) = match req.get_query_str() {
+            Some(q) => ("?", q),
+            None => ("", "")
+        };
+        let rand_chars = rand_chars(settings.config.state_parameter_length);
+        format!(
+            "{}{}{}{}",
+            path,
+            sep,
+            query,
+            rand_chars,
+        )
+    };
     // Generate the OpenID Connect nonce, used to mitigate replay attacks.
     // This is a random value with a twist: in is a time limited token (JWT)
     // that encodes the nonce and the state within its claims.

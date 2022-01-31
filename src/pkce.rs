@@ -26,7 +26,7 @@ impl Pkce {
         let verifier = rand_chars(Self::LENGTH);
         let challenge = match code_challenge_method {
             "S256" => {
-                base64::encode_config(&Hash::hash(&verifier.as_bytes()), base64::URL_SAFE_NO_PAD)
+                base64::encode_config(&Hash::hash(verifier.as_bytes()), base64::URL_SAFE_NO_PAD)
             }
             _ => base64::encode_config(&verifier, base64::URL_SAFE_NO_PAD),
         };

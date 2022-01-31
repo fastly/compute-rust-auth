@@ -130,7 +130,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     // Otherwise, start the OAuth 2.0 authorization code flow.
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
-    let pkce = Pkce::new(&settings.config.code_challenge_method);
+    let pkce = Pkce::new(settings.config.code_challenge_method);
     // Generate the OAuth 2.0 state parameter, used to prevent CSRF attacks,
     // and store the original request path and query string.
     let state = {

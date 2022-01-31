@@ -11,7 +11,7 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
 ) -> Result<JWTClaims<CustomClaims>, Error> {
     // Peek at the token metadata before verification and retrieve the key identifier,
     // in order to pick the right key out of the JWK set.
-    let metadata = Token::decode_metadata(&token_string)?;
+    let metadata = Token::decode_metadata(token_string)?;
     let key_id = match metadata.key_id() {
         None => return Err(Error::msg("Failed to decode public key identifier for token")),
         Some(value) => value
@@ -36,7 +36,7 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
         allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
         ..Default::default()
     };
-    public_key.verify_token::<CustomClaims>(&token_string, Some(verification_options))
+    public_key.verify_token::<CustomClaims>(token_string, Some(verification_options))
 }
 
 pub struct NonceToken {
@@ -47,7 +47,7 @@ impl NonceToken {
     // Computes a HS256 key from the nonce secret.
     pub fn new(nonce_secret: &str) -> Self {
         Self {
-            auth_key: HS256Key::from_bytes(&Hash::hash(&nonce_secret.as_bytes())),
+            auth_key: HS256Key::from_bytes(&Hash::hash(nonce_secret.as_bytes())),
         }
     }
     // Creates a time-limited token and encodes the passed state within its claims.
@@ -67,7 +67,7 @@ impl NonceToken {
     pub fn get_claimed_state(&self, state_and_nonce: &str) -> Option<String> {
         match &self
             .auth_key
-            .verify_token::<NoCustomClaims>(&state_and_nonce, None)
+            .verify_token::<NoCustomClaims>(state_and_nonce, None)
         {
             Ok(state_and_nonce_claim) => state_and_nonce_claim.subject.to_owned(),
             _ => None,

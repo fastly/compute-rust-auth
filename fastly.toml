@@ -1,5 +1,17 @@
-manifest_version = 1
-name = "compute-rust-auth"
-description = "Authentication at the edge with OAuth 2.0 and OpenID Connect"
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
 authors = ["Dora Militaru <dmilitaru@fastly.com>"]
+description = "Authentication at the edge with OAuth 2.0 and OpenID Connect"
 language = "rust"
+manifest_version = 2
+name = "compute-rust-auth"
+service_id = ""
+
+
+[local_server]
+  [local_server.backends]
+    [local_server.backends.backend]
+      url = "https://httpbin.org"
+    [local_server.backends.idp]
+      url = "https://dev-0y7s8dkt.us.auth0.com"

@@ -1,6 +1,6 @@
 [package]
 name = "compute-rust-auth"
-version = "0.2.0"
+version = "0.3.0"
 authors = []
 edition = "2018"
 
@@ -8,11 +8,12 @@ edition = "2018"
 debug = true
 
 [dependencies]
-fastly = "0.7.1"
-hmac-sha256 = "0.1.7"
+fastly = "0.8.2"
+hmac-sha256 = "1.0.0"
 rand = "0.8.3"
-serde = { version = "1.0.125", features = ["derive"] }
-serde_json = "1.0.64"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.78"
 base64 = "0.13.0"
 toml = "0.5.8"
-jwt-simple = "0.9.3"
+jwt-simple = "0.10.8"
+zeroize_derive = "1.1.1"

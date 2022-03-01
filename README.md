@@ -20,10 +20,10 @@ After you have installed the starter kit, you'll need to do some configuration b
 
 You might operate your own identity service, but any [OAuth 2.0, OpenID Connect (OIDC) conformant provider](https://en.wikipedia.org/wiki/List_of_OAuth_providers) (IdP) will work.  You will need the following from your IdP:
 
-* A *Client ID*
-* The hostname of the IdP's *authorization server*.
-* An *OpenID Connect Discovery document*
-* A *JSON Web key set*
+* A *Client ID* -> Add to `src/config.toml`
+* An *OpenID Connect Discovery document* -> Save as `src/well-known/openid-configuration.json`
+* A *JSON Web key set* -> Save as `src/well-known/jwks.json`
+* The hostname of the IdP's *authorization server* -> Create as a backend called `idp` on your Fastly service
 
 As an example, if you are using Auth0, follow these steps after installing the starter kit:
 
@@ -42,7 +42,7 @@ Now you can build and deploy your new service:
 $ fastly compute publish
 ```
 
-You'll be prompted to enter the hostname of your own origin, and also the authorization server of the identity provider.  When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
+You'll be prompted to enter the hostname of your own origin to configure the backend called `backend`, and also the authorization server of the identity provider which will be used to configure a backend called `idp`.  When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
 ### Link the identity provider to your Fastly domain
 
 Add `https://{your-fastly-domain}/callback` to the list of allowed callback URLs in your identity provide's app configuration (In Auth0, within your application's **Settings** tab, the field is labelled **Allowed Callback URLs**).

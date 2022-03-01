@@ -3,6 +3,7 @@
 Connect to an identity provider such as Auth0 using OAuth 2.0 and validate authentication status at the Edge, to authorize access to your edge or origin hosted applications.
 
 **For more details about other starter kits for Compute@Edge, see the [Fastly developer hub](https://developer.fastly.com/solutions/starters)**
+
 ## Authentication at Fastly's edge, using OAuth 2.0, OpenID Connect, and Compute@Edge
 
 This is a self-contained Rust implementation 🦀  for the [OAuth 2.0](https://oauth.net/2/) [Authorization Code flow](https://oauth.net/2/grant-types/authorization-code/) with [Proof Key for Code Exchange (PKCE)](https://oauth.net/2/pkce/), deployed to [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless/).

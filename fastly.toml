@@ -1,4 +1,5 @@
 authors = ["<oss@fastly.com>"]
+name = "Authenticate at edge with OAuth"
 description = "Connect to an identity provider such as Auth0 using OAuth 2.0 and validate authentication status at the Edge, to authorize access to your edge or origin hosted applications."
 language = "rust"
 name = "compute-rust-auth"

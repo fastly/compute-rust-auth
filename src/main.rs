@@ -9,8 +9,8 @@ use config::Config;
 use fastly::http::header::AUTHORIZATION;
 use fastly::{Error, Request, Response};
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
-use jwt_simple::claims::NoCustomClaims;
 use jwt::{validate_token_rs256, NonceToken};
+use jwt_simple::claims::NoCustomClaims;
 use pkce::{rand_chars, Pkce};
 
 #[fastly::main]
@@ -137,16 +137,10 @@ fn main(mut req: Request) -> Result<Response, Error> {
         let path = req.get_path();
         let (sep, query) = match req.get_query_str() {
             Some(q) => ("?", q),
-            None => ("", "")
+            None => ("", ""),
         };
         let rand_chars = rand_chars(settings.config.state_parameter_length);
-        format!(
-            "{}{}{}{}",
-            path,
-            sep,
-            query,
-            rand_chars,
-        )
+        format!("{}{}{}{}", path, sep, query, rand_chars)
     };
     // Generate the OpenID Connect nonce, used to mitigate replay attacks.
     // This is a random value with a twist: in is a time limited token (JWT)

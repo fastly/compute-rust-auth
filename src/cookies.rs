@@ -29,8 +29,5 @@ pub fn expired(name: &str) -> String {
 }
 
 pub fn session(name: &str, value: &str) -> String {
-    format!(
-        "{}{}={}; {}",
-        COOKIE_PREFIX, name, value, COOKIE_ATTRIBUTES
-    )
+    format!("{}{}={}; {}", COOKIE_PREFIX, name, value, COOKIE_ATTRIBUTES)
 }

@@ -1,8 +1,8 @@
 use crate::config::Config;
 use fastly::Error;
 use hmac_sha256::Hash;
-use serde::{de::DeserializeOwned, Serialize};
 use jwt_simple::prelude::*;
+use serde::{de::DeserializeOwned, Serialize};
 
 // Validates a JWT signed with RS256, and verifies its claims.
 pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
@@ -13,8 +13,12 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     // in order to pick the right key out of the JWK set.
     let metadata = Token::decode_metadata(token_string)?;
     let key_id = match metadata.key_id() {
-        None => return Err(Error::msg("Failed to decode public key identifier for token")),
-        Some(value) => value
+        None => {
+            return Err(Error::msg(
+                "Failed to decode public key identifier for token",
+            ))
+        }
+        Some(value) => value,
     };
     // Match the public key id for the JSON web key.
     let key_metadata = settings
@@ -54,8 +58,7 @@ impl NonceToken {
     // Returns a tuple: (token, nonce)
     pub fn generate_from_state(&self, state: &str) -> (String, String) {
         // Create token claims valid for 5 minutes.
-        let mut state_and_nonce_claim =
-            Claims::create(Duration::from_mins(5)).with_subject(state);
+        let mut state_and_nonce_claim = Claims::create(Duration::from_mins(5)).with_subject(state);
         // Generate a random value (nonce) and attach it to the token.
         let nonce = state_and_nonce_claim.create_nonce();
         (

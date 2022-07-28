@@ -50,8 +50,8 @@ jobs:
     - name: Store OIDC metadata
       run: echo "${{ secrets.OIDC_METADATA_JSON }}" > src/well-known/openid-configuration.json
       shell: bash
-    - name: fmt
-      run: cargo fmt
+    - name: Check binaries and format
+      run: RUSTFLAGS="--deny warnings" cargo check --bins --target wasm32-wasi && cargo fmt -- --check
       shell: bash
     - name: clippy
       run: cargo clippy

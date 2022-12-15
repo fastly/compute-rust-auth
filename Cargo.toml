@@ -8,7 +8,7 @@ edition = "2018"
 debug = true
 
 [dependencies]
-fastly = "0.8.6"
+fastly = "0.9.0"
 hmac-sha256 = "1.1.4"
 rand = "0.8.5"
 serde = { version = "1.0.140", features = ["derive"] }

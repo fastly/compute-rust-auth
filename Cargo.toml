@@ -8,11 +8,11 @@ edition = "2018"
 debug = true
 
 [dependencies]
-fastly = "0.8.6"
-hmac-sha256 = "1.1.4"
+fastly = "0.9.1"
+hmac-sha256 = "1.1.6"
 rand = "0.8.5"
-serde = { version = "1.0.140", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.82"
-base64 = "0.13.0"
-toml = "0.5.9"
-jwt-simple = "0.11.0"
+base64 = "0.21.0"
+toml = "0.6.0"
+jwt-simple = "0.11.3"

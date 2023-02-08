@@ -15,6 +15,12 @@ use pkce::{rand_chars, Pkce};
 
 #[fastly::main]
 fn main(mut req: Request) -> Result<Response, Error> {
+    // Log service version
+    println!(
+        "FASTLY_SERVICE_VERSION: {}",
+        std::env::var("FASTLY_SERVICE_VERSION").unwrap_or_else(|_| String::new())
+    );
+
     // Load the service configuration, and the OpenID discovery and token signature metadata.
     let settings = Config::load();
 

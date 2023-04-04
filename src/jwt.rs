@@ -1,8 +1,15 @@
 use crate::config::Config;
+use base64::{
+    alphabet,
+    engine::{self, general_purpose},
+    Engine as _,
+};
 use fastly::Error;
 use hmac_sha256::Hash;
 use jwt_simple::prelude::*;
 use serde::{de::DeserializeOwned, Serialize};
+const CUSTOM_ENGINE: engine::GeneralPurpose =
+    engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD);
 
 // Validates a JWT signed with RS256, and verifies its claims.
 pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
@@ -28,8 +35,8 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
         .find(|&k| k.key_id == key_id)
         .unwrap();
     // Reconstruct the public key used to sign the token.
-    let modulus = base64::decode_config(&key_metadata.modulus, base64::URL_SAFE_NO_PAD)?;
-    let exponent = base64::decode_config(&key_metadata.exponent, base64::URL_SAFE_NO_PAD)?;
+    let modulus = CUSTOM_ENGINE.decode(&key_metadata.modulus)?;
+    let exponent = CUSTOM_ENGINE.decode(&key_metadata.exponent)?;
     let public_key = RS256PublicKey::from_components(&modulus, &exponent)?;
     // Verify the token's claims.
     // Custom claims are also supported – see https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims

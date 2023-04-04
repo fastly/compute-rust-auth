@@ -1,7 +1,14 @@
+use base64::{
+    alphabet,
+    engine::{self, general_purpose},
+    Engine as _,
+};
 use hmac_sha256::Hash;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::iter;
+const CUSTOM_ENGINE: engine::GeneralPurpose =
+    engine::GeneralPurpose::new(&alphabet::URL_SAFE, general_purpose::NO_PAD);
 
 pub fn rand_chars(length: usize) -> String {
     let mut rng = thread_rng();
@@ -25,10 +32,8 @@ impl Pkce {
     pub fn new(code_challenge_method: &str) -> Self {
         let verifier = rand_chars(Self::LENGTH);
         let challenge = match code_challenge_method {
-            "S256" => {
-                base64::encode_config(&Hash::hash(verifier.as_bytes()), base64::URL_SAFE_NO_PAD)
-            }
-            _ => base64::encode_config(&verifier, base64::URL_SAFE_NO_PAD),
+            "S256" => CUSTOM_ENGINE.encode(&Hash::hash(verifier.as_bytes())),
+            _ => CUSTOM_ENGINE.encode(&verifier),
         };
         Self {
             code_verifier: verifier,

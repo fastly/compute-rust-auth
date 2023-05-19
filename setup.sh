@@ -12,13 +12,15 @@ read -p "Origin server host [httpbin.org] " TLS_ORIGIN_HOST
 TLS_ORIGIN_HOST=${TLS_ORIGIN_HOST:-"httpbin.org"}
 printInGreen $TLS_ORIGIN_HOST
 
-read -p "Authorization server host [dev-0y7s8dkt.us.auth0.com] " AUTH_SERVER_HOST
-AUTH_SERVER_HOST=${AUTH_SERVER_HOST:-"dev-0y7s8dkt.us.auth0.com"}
+read -p "Authorization server host [accounts.google.com] " AUTH_SERVER_HOST
+AUTH_SERVER_HOST=${AUTH_SERVER_HOST:-"accounts.google.com"}
 printInGreen $AUTH_SERVER_HOST
 
-read -p "Client ID [m0dfcl4aX3qshMnXrng67qGHZBS9mJ1z] " CLIENT_ID
-CLIENT_ID=${CLIENT_ID:-"m0dfcl4aX3qshMnXrng67qGHZBS9mJ1zxv"}
+read -p "Client ID (GOOGLE_CLIENT_ID.apps.googleusercontent.com) " CLIENT_ID
 printInGreen $CLIENT_ID
+
+read -p "Client secret " CLIENT_SECRET
+printInGreen $CLIENT_SECRET
 
 echo "Generating a random, non-guessable secret..."
 NONCE_SECRET=$(dd if=/dev/random bs=32 count=1 | base64)
@@ -26,6 +28,7 @@ printInGreen $NONCE_SECRET
 
 # Update the service configuration file (src/config.toml)
 sed -i.bak "s|client_id = .*|client_id = \"$CLIENT_ID\"|" src/config.toml 
+sed -i.bak "s|client_secret = .*|client_secret = \"$CLIENT_SECRET\"|" src/config.toml 
 sed -i.bak "s|nonce_secret = .*|nonce_secret = \"$NONCE_SECRET\"|" src/config.toml 
 rm -f src/config.toml.bak
 

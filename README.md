@@ -26,7 +26,11 @@ You might operate your own identity service, but any [OAuth 2.0, OpenID Connect 
 * A *JSON Web key set* -> Save as `src/well-known/jwks.json`
 * The hostname of the IdP's *authorization server* -> Create as a backend called `idp` on your Fastly service
 
-As an example, if you are using Auth0, follow these steps after installing the starter kit:
+#### Examples
+
+##### Auth0 as IdP
+
+If you are using Auth0, follow these steps after installing the starter kit:
 
 1. In the [Auth0 dashboard](https://manage.auth0.com/), choose **Create Application**. Give your app a name and choose "Regular web application".
    - The *client ID* (eg. `4PWZBMqMWxnKXt1heitack0Jy2xRQP0p`) is shown next to your application name.
@@ -34,6 +38,15 @@ As an example, if you are using Auth0, follow these steps after installing the s
 1. Back in Auth0's dashboard, click **Settings**, and note down the *authorization server* hostname (eg. `dev-wna8lqtb.us.auth0.com`) is shown in the **Domain** field.
 1. In a new tab, navigate to `https://{authorization-server-hostname}/.well-known/openid-configuration`.  Save it to `src/well-known/openid-configuration.json` in your Fastly project.
 1. Open the file you just created and locate the `jwks_uri` property.  Fetch the document at that URL and save it to `src/well-known/jwks.json` in your Fastly project.
+
+##### Google as IdP
+
+Before installing the starter kit, follow [Google's instructions](https://developers.google.com/identity/openid-connect/openid-connect) on setting up OAuth 2.0 with OpenID Connect.
+
+1. Make a note of your `client ID` and `client secret` from the Credentials page in Google API Console.
+1. Open `src/config.toml` in your Fastly project and type in the `client_id` and `client_secret` you jotted down earlier.  Set the `nonce_secret` field to a long, non-guessable random string of your choice.  Save the file.
+1. Navigate to `https://accounts.google.com/.well-known/openid-configuration`.  Save it to `src/well-known/openid-configuration.json` in your Fastly project.
+1. Open the file you just created and locate the `jwks_uri` property.  Fetch the document at that URL (`https://www.googleapis.com/oauth2/v3/certs`) and save it to `src/well-known/jwks.json` in your Fastly project.
 
 ### Deploy the Fastly service and get a domain
 
@@ -46,7 +59,10 @@ $ fastly compute publish
 You'll be prompted to enter the hostname of your own origin to configure the backend called `backend`, and also the authorization server of the identity provider which will be used to configure a backend called `idp`.  When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
 ### Link the identity provider to your Fastly domain
 
-Add `https://{your-fastly-domain}/callback` to the list of allowed callback URLs in your identity provide's app configuration (In Auth0, within your application's **Settings** tab, the field is labelled **Allowed Callback URLs**).
+Add `https://{your-fastly-domain}/callback` to the list of allowed callback URLs in your identity provider's app configuration:
+
+* In Auth0, within your application's **Settings** tab, the field is labelled **Allowed Callback URLs**.
+* With Google, you'll have to edit the **Authorized redirect URIs** for the OAuth client ID corresponding to the credentials you created for your project. 
 
 This allows the authorization server to send the user back to the Compute@Edge service.
 

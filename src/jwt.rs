@@ -41,10 +41,10 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     // Verify the token's claims.
     // Custom claims are also supported – see https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
     let verification_options = VerificationOptions {
-        allowed_issuers: Some(HashSet::from_strings(&[settings
+        allowed_issuers: Some(HashSet::from_strings(&[&settings
             .openid_configuration
             .issuer])),
-        allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
+        allowed_audiences: Some(HashSet::from_strings(&[&settings.config.client_id])),
         ..Default::default()
     };
     public_key.verify_token::<CustomClaims>(token_string, Some(verification_options))

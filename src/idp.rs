@@ -17,7 +17,7 @@ pub struct AuthorizeResponse {
 pub struct ExchangePayload<'a> {
     pub client_id: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_secret: Option<&'a str>,
+    pub client_secret: Option<String>,
     pub code: &'a str,
     pub grant_type: &'a str,
     pub redirect_uri: &'a str,

@@ -1,78 +1,78 @@
+use fastly::ConfigStore;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(default)]
-pub struct ServiceConfiguration<'a> {
-    pub client_id: &'a str,
-    pub client_secret: Option<&'a str>,
+pub struct ServiceConfiguration {
+    pub client_id: String,
+    pub client_secret: Option<String>,
     pub introspect_access_token: bool,
     pub jwt_access_token: bool,
-    pub callback_path: &'a str,
-    pub code_challenge_method: &'a str,
+    pub callback_path: String,
+    pub code_challenge_method: String,
     pub state_parameter_length: usize,
     pub scope: String,
-    pub nonce_secret: &'a str,
+    pub nonce_secret: String,
 }
 
-impl Default for ServiceConfiguration<'static> {
+impl Default for ServiceConfiguration {
     fn default() -> Self {
         Self {
-            client_id: "",
+            client_id: "".to_string(),
             client_secret: None,
             introspect_access_token: false,
             jwt_access_token: false,
-            callback_path: "/callback",
-            code_challenge_method: "S256",
+            callback_path: "/callback".to_string(),
+            code_challenge_method: "S256".to_string(),
             state_parameter_length: 10,
             scope: "openid".to_string(),
-            nonce_secret: "",
+            nonce_secret: "".to_string(),
         }
     }
 }
 
 #[derive(Deserialize, Default)]
-pub struct OpenIdConfiguration<'a> {
-    pub issuer: &'a str,
-    pub authorization_endpoint: &'a str,
-    pub token_endpoint: &'a str,
-    pub userinfo_endpoint: &'a str,
+pub struct OpenIdConfiguration {
+    pub issuer: String,
+    pub authorization_endpoint: String,
+    pub token_endpoint: String,
+    pub userinfo_endpoint: String,
 }
 
 #[derive(Deserialize, Default)]
-pub struct JsonWebKey<'a> {
+pub struct JsonWebKey {
     #[serde(rename = "kid")]
-    pub key_id: &'a str,
+    pub key_id: String,
     #[serde(rename = "e")]
-    pub exponent: &'a str,
+    pub exponent: String,
     #[serde(rename = "n")]
-    pub modulus: &'a str,
+    pub modulus: String,
 }
 
 #[derive(Deserialize, Default)]
-pub struct Jwks<'a> {
-    #[serde(borrow)]
-    pub keys: Vec<JsonWebKey<'a>>,
+pub struct Jwks {
+    pub keys: Vec<JsonWebKey>,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Config {
-    #[serde(borrow)]
-    pub config: ServiceConfiguration<'static>,
-    #[serde(borrow)]
-    pub jwks: Jwks<'static>,
-    #[serde(borrow)]
-    pub openid_configuration: OpenIdConfiguration<'static>,
+    pub config: ServiceConfiguration,
+    pub jwks: Jwks,
+    pub openid_configuration: OpenIdConfiguration,
 }
 
 impl Config {
-    pub fn load() -> Self {
-        Self {
+    pub fn load() -> Result<Self, fastly::Error> {
+        let cfg = ConfigStore::open("config");
+        let jwks: String = cfg.get("jwks").expect("JWKS metadata not found");
+        let openid_config: String = cfg
+            .get("openid_configuration")
+            .expect("OIDC metadata not found");
+
+        Ok(Self {
             config: toml::from_str(include_str!("config.toml")).unwrap(),
-            jwks: serde_json::from_str(include_str!("well-known/jwks.json")).unwrap(),
-            openid_configuration: serde_json::from_str(include_str!(
-                "well-known/openid-configuration.json"
-            ))
-            .unwrap(),
-        }
+            jwks: serde_json::from_str(&jwks).unwrap(),
+            openid_configuration: serde_json::from_str(&openid_config).unwrap(),
+        })
     }
 }

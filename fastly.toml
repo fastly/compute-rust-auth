@@ -14,4 +14,27 @@ manifest_version = 2
 
     [setup.backends.idp]
       description = "Identity provider authorization server"
-      address = "dev-xxxxxxxxx.us.auth0.com"
+      address = "accounts.google.com"
+
+[setup.config_stores]
+
+[setup.config_stores.config]
+description = "Configuration metadata store"
+
+[local_server]
+
+[local_server.backends]
+
+[local_server.backends.backend]
+url = "https://httpbin.org/"
+
+[local_server.backends.idp]
+url = "https://accounts.google.com"
+
+[local_server.config_stores]
+[local_server.config_stores.config]
+# A config store with two keys:
+# jwks :string :REQUIRED – JWKS metadata, JSON-serialized.
+# openid_configuration :string :REQUIRED – OpenID Configuration metadata, JSON-serialized.
+file = "./example-config.json"
+format = "json"

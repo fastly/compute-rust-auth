@@ -43,7 +43,7 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     let verification_options = VerificationOptions {
         allowed_issuers: Some(HashSet::from_strings(&[
             key_metadata.issuer,
-            settings.openid_configuration.issuer
+            settings.openid_configuration.issuer,
         ])),
         allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
         ..Default::default()

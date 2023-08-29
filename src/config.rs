@@ -46,6 +46,7 @@ pub struct JsonWebKey<'a> {
     pub exponent: &'a str,
     #[serde(rename = "n")]
     pub modulus: &'a str,
+    pub issuer: &'a str,
 }
 
 #[derive(Deserialize, Default)]

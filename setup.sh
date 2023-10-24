@@ -40,7 +40,7 @@ curl -sLX GET https://$AUTH_SERVER_HOST/.well-known/openid-configuration \
 curl -sLX GET $(sed 's|.*"jwks_uri":"\([^"]*\).*|\1|' src/well-known/openid-configuration.json) \
     > src/well-known/jwks.json
 
-printInGreen "All set! Let's create a Compute@Edge service."
+printInGreen "All set! Let's create a Compute service."
 
 echo -e "✨ \033[0;33mKeep selecting the defaults by pressing the enter key.\033[0m ✨
 "

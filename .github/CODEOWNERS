@@ -1,0 +1,3 @@
+/README.md @fastly/developer-relations
+/fastly.toml @fastly/developer-relations
+*.rs @fastly/ecp-sdk-sme-rust

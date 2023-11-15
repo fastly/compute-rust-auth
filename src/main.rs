@@ -25,7 +25,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     let settings = Config::load();
 
     // Parse the Cookie header.
-    let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
+    let cookie_header = req.remove_header_str_lossy("cookie").unwrap_or_default();
     let cookie = cookies::parse(&cookie_header);
 
     // Build the OAuth 2.0 redirect URL.

@@ -46,6 +46,7 @@ pub struct JsonWebKey<'a> {
     pub exponent: &'a str,
     #[serde(rename = "n")]
     pub modulus: &'a str,
+    #[serde(default)]
     pub issuer: &'a str,
 }
 

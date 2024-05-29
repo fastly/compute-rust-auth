@@ -42,7 +42,10 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     // Custom claims are also supported – see https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
     let verification_options = VerificationOptions {
         allowed_issuers: Some(HashSet::from_strings(&[
-            key_metadata.issuer,
+            // Some IdPs (e.g. Azure, when MS Live sign-in support is enabled) provide tenant-specific and public keys in the same JWKSet,
+            // and will therefore include the non-standard "issuer" property in JWK metadata.
+            // Uncomment the line below to include the issuer property from the key metadata during verification:
+            // key_metadata.issuer,
             settings.openid_configuration.issuer,
         ])),
         allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),

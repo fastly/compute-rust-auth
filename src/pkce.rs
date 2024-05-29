@@ -32,7 +32,7 @@ impl Pkce {
     pub fn new(code_challenge_method: &str) -> Self {
         let verifier = rand_chars(Self::LENGTH);
         let challenge = match code_challenge_method {
-            "S256" => CUSTOM_ENGINE.encode(&Hash::hash(verifier.as_bytes())),
+            "S256" => CUSTOM_ENGINE.encode(Hash::hash(verifier.as_bytes())),
             _ => CUSTOM_ENGINE.encode(&verifier),
         };
         Self {

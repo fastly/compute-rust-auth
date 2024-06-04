@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 const COOKIE_ATTRIBUTES: &str = "Path=/; SameSite=Lax; Secure; HttpOnly";
-const COOKIE_PREFIX: &str = "__Secure-";
+
+// Change to "__Secure-" for production, and "local-" for local development.
+const COOKIE_PREFIX: &str = "local-";
 
 pub fn parse(cookie_string: &str) -> HashMap<&str, &str> {
     cookie_string

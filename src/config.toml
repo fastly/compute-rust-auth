@@ -1,6 +1,6 @@
 # [REQUIRED] OAuth 2.0 client identifier valid at the authorization server.
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1
-client_id = "m0dfcl4aX3qshMnXrng67qGHZBS9mJ1zxv"
+client_id = "YOUR_CLIENT_ID.apps.googleusercontent.com"
 
 # [REQUIRED] A secret to verify the OpenID nonce used to mitigate replay attacks.
 # https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
@@ -27,7 +27,7 @@ introspect_access_token = true
 # https://developers.google.com/identity/protocols/oauth2/native-app#exchange-authorization-code
 # WARNING: Including this parameter produces NON-NORMATIVE OAuth 2.0 token requests:
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.1
-# client_secret = "SOME_CLIENT_SECRET"
+client_secret = "YOUR_CLIENT_SECRET"
 
 # [OPTIONAL] Path for the redirection URI to which OAuth 2.0 responses will be sent. 
 # https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1

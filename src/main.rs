@@ -15,37 +15,54 @@ use pkce::{rand_chars, Pkce};
 
 #[fastly::main]
 fn main(mut req: Request) -> Result<Response, Error> {
+    let fastly_service_version =
+        std::env::var("FASTLY_SERVICE_VERSION").unwrap_or_else(|_| String::new());
+
     // Log service version
-    println!(
-        "FASTLY_SERVICE_VERSION: {}",
-        std::env::var("FASTLY_SERVICE_VERSION").unwrap_or_else(|_| String::new())
-    );
+    println!("FASTLY_SERVICE_VERSION: {}", fastly_service_version);
 
     // Load the service configuration, and the OpenID discovery and token signature metadata.
     let settings = Config::load();
-
+    println!(
+        "http://{}:7676{}",
+        req.get_url().host_str().unwrap(),
+        settings.config.callback_path
+    );
     // Parse the Cookie header.
     let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
     let cookie = cookies::parse(&cookie_header);
 
+    println!("Cookie map: {:?}", cookie);
+
     // Build the OAuth 2.0 redirect URL.
-    let redirect_uri = format!(
-        "https://{}{}",
-        req.get_url().host_str().unwrap(),
-        settings.config.callback_path
-    );
+    let redirect_uri = match fastly_service_version.len() {
+        0 => format!(
+            "http://{}:7676{}",
+            req.get_url().host_str().unwrap(),
+            settings.config.callback_path
+        ),
+        _ => format!(
+            "https://{}{}",
+            req.get_url().host_str().unwrap(),
+            settings.config.callback_path
+        )
+    };
 
     // If the path matches the redirect URL path, continue the OAuth 2.0 authorization code flow.
     if req.get_url_str().starts_with(&redirect_uri) {
         // VERIFY THE AUTHORIZATION CODE AND EXCHANGE IT FOR TOKENS.
+        println!("Authorization code obtained; verifying and exchanging for tokens...");
 
         // Retrieve the code and state from the query string.
         let qs: CallbackQueryParameters = req.get_query().unwrap();
         // Verify that the state matches what we've stored, and exchange the authorization code for tokens.
         return match (cookie.get("state"), cookie.get("code_verifier")) {
             (Some(state), Some(code_verifier)) => {
+                println!("state and code_verifier cookies found.");
+
                 // Authenticate the state token returned by the IdP,
                 // and verify that the state we stored matches its subject claim.
+                println!("Verifying the token's claims and matching state...");
                 match NonceToken::new(settings.config.nonce_secret).get_claimed_state(&qs.state) {
                     Some(claimed_state) => {
                         if state != &claimed_state {
@@ -57,6 +74,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     }
                 };
                 // Exchange the authorization code for tokens.
+                println!("Exchanging the authorization code for tokens...");
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
                         client_id: settings.config.client_id,
@@ -70,6 +88,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     .send("idp")?;
                 // If the exchange is successful, proceed with the original request.
                 if exchange_res.get_status().is_success() {
+                    println!("Exchange successful. Recreating the original request...");
                     // Strip the random state from the state cookie value to get the original request.
                     let original_req =
                         &state[..(state.len() - settings.config.state_parameter_length)];
@@ -96,7 +115,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
     if let (Some(access_token), Some(id_token)) =
         (cookie.get("access_token"), cookie.get("id_token"))
     {
+        println!("Access token and ID token found; validating...");
         if settings.config.introspect_access_token {
+            println!("Validating the access token remotely with the IdP's userinfo endpoint...");
             // Validate the access token using the OpenID userinfo endpoint;
             // bearer authentication supports opaque, JWT and other token types (PASETO, Hawk),
             // depending on your Identity Provider configuration.
@@ -111,10 +132,12 @@ fn main(mut req: Request) -> Result<Response, Error> {
         } else if settings.config.jwt_access_token
             && validate_token_rs256::<NoCustomClaims>(access_token, &settings).is_err()
         {
+            println!("Failed to validate the access token at the edge.");
             return Ok(responses::unauthorized("JWT access token invalid."));
         }
 
         // Validate the ID token.
+        println!("Validating the ID token at the edge...");
         if validate_token_rs256::<NoCustomClaims>(id_token, &settings).is_err() {
             return Ok(responses::unauthorized("ID token invalid."));
         }
@@ -134,6 +157,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     }
 
     // Otherwise, start the OAuth 2.0 authorization code flow.
+    println!("Starting OAuth 2.0 authorization code flow...");
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
     let pkce = Pkce::new(settings.config.code_challenge_method);
@@ -167,6 +191,11 @@ fn main(mut req: Request) -> Result<Response, Error> {
             nonce: &nonce,
         })
         .unwrap();
+
+    println!("PKCE code verifier: {}", pkce.code_verifier);
+    println!("State: {}", state);
+    println!("Redirecting to: {} (and setting code_verifier and state cookies)", authorize_req.get_url_str());
+
     // Redirect to the Identity Provider's login and authorization prompt.
     Ok(responses::temporary_redirect(
         authorize_req.get_url_str(),

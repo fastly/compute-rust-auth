@@ -23,11 +23,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Load the service configuration, and the OpenID discovery and token signature metadata.
     let settings = Config::load();
-    println!(
-        "http://{}:7676{}",
-        req.get_url().host_str().unwrap(),
-        settings.config.callback_path
-    );
+
     // Parse the Cookie header.
     let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
     let cookie = cookies::parse(&cookie_header);

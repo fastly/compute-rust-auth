@@ -31,8 +31,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
     println!("Cookie map: {:?}", cookie);
 
     // Build the OAuth 2.0 redirect URL.
-    let redirect_uri = match fastly_service_version.len() {
-        0 => format!(
+    let redirect_uri = match fastly_service_version.as_str() {
+        "0" => format!(
             "http://{}:7676{}",
             req.get_url().host_str().unwrap(),
             settings.config.callback_path
@@ -43,6 +43,8 @@ fn main(mut req: Request) -> Result<Response, Error> {
             settings.config.callback_path
         )
     };
+
+    println!("Redirect URI: {}", redirect_uri);
 
     // If the path matches the redirect URL path, continue the OAuth 2.0 authorization code flow.
     if req.get_url_str().starts_with(&redirect_uri) {

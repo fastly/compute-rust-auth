@@ -196,7 +196,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
         "Redirecting to: {} (and setting code_verifier and state cookies)",
         authorize_req.get_url_str()
     );
-    
+
     // Redirect to the Identity Provider's login and authorization prompt.
     Ok(responses::temporary_redirect(
         authorize_req.get_url_str(),

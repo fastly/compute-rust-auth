@@ -39,18 +39,12 @@ jobs:
       run: |
         echo "${{ secrets.CLIENT_ID }}" > .secrets.client_id
         echo "${{ secrets.CLIENT_SECRET }}" > .secrets.client_secret
-        dd if=/dev/random bs=32 count=1 | base64 > .secret.nonce_secret
-      shell: bash    
+        dd if=/dev/random bs=32 count=1 | base64 > .secret.nonce_secret 
     - name: Check binaries and format
       run: RUSTFLAGS="--deny warnings" cargo check --bins --target wasm32-wasi && cargo fmt -- --check
-      shell: bash
-    - name: clippy
+    - name: Run clippy
       run: cargo clippy
-      shell: bash
-
-    - name: audit
+    - name: Run audit
       run: cargo audit
-      shell: bash
-    - name: build
+    - name: Run build
       run: cargo build
-      shell: bash

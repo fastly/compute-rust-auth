@@ -35,6 +35,7 @@ pub struct JsonWebKey {
     pub exponent: String,
     #[serde(rename = "n")]
     pub modulus: String,
+    #[allow(dead_code)]
     #[serde(default)]
     pub issuer: String,
 }

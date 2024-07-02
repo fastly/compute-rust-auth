@@ -1,14 +1,14 @@
 authors = ["<oss@fastly.com>"]
-name = "Authenticate at edge with OAuth"
+name = "Auth at edge with OAuth 2.0"
 description = "Connect to an identity provider such as Google using OAuth 2.0 and validate authentication status at the Edge, to authorize access to your edge or origin hosted applications."
 language = "rust"
-manifest_version = 2
+manifest_version = 3
 
 [setup]
 
   [setup.backends]
 
-    [setup.backends.backend]
+    [setup.backends.origin]
       description = "Content or application origin"
       address = "httpbin.org"
 
@@ -16,9 +16,80 @@ manifest_version = 2
       description = "Identity provider authorization server"
       address = "accounts.google.com"
 
+  [setup.secret_stores]
+
+    [setup.secret_stores.oauth_secrets]
+      description = "Store for authentication secrets"
+ 
+    [setup.secret_stores.oauth_secrets.entries]
+
+        [setup.secret_stores.oauth_secrets.entries.client_id]
+          description = "OAuth 2.0 client ID valid at the Identity Provider's authorization server."
+
+        [setup.secret_stores.oauth_secrets.entries.nonce_secret]
+          description = "A random secret to verify the OpenID nonce used to mitigate replay attacks."
+
+        # Optional client secret for certain IdPs' token endpoint. 
+        # WARNING: Including this parameter produces NON-NORMATIVE OAuth 2.0 token requests.
+        # Comment out if not required.
+        [setup.secret_stores.oauth_secrets.entries.client_secret]
+          description = "[OPTIONAL] client_secret parameter for certain Identity Providers' (e.g., Google) token endpoint."
+
+  [setup.config_stores]
+
+    [setup.config_stores.oauth_config]
+      description = "Configuration metadata store"
+
+      [setup.config_stores.oauth_config.items]
+
+        [setup.config_stores.oauth_config.items.openid_configuration]
+          description = "OpenID Connect (OIDC) discovery document containing OAuth 2.0 endpoints. This is usually obtained from https://YOUR_AUTH_SERVER/.well-known/openid-configuration"
+          input_type = "string"
+         
+        [setup.config_stores.oauth_config.items.jwks]
+          description = "JSON Web Key Set (JWKS) containing the public keys used to verify the JWT signature. You can find this at the jwks_uri endpoint in the OIDC discovery document."
+          input_type = "string"
+
+        [setup.config_stores.oauth_config.items.callback_path]
+          description = "Path for the redirection URI to which OAuth 2.0 responses will be sent."
+          value = "/callback"
+
 [local_server]
+
   [local_server.backends]
+
     [local_server.backends.idp]
       url = "https://accounts.google.com/"
-    [local_server.backends.backend]
+
+    [local_server.backends.origin]
       url = "https://httpbin.org/"
+
+  [local_server.secret_stores]
+    [[local_server.secret_stores.oauth_secrets]]
+      key = "client_id"
+      file = ".secret.client_id"
+
+    [[local_server.secret_stores.oauth_secrets]]
+      key = "nonce_secret"
+      file = ".secret.nonce_secret"
+
+    # Optional client secret for certain IdPs' token endpoint. 
+    # WARNING: Including this parameter produces NON-NORMATIVE OAuth 2.0 token requests.
+    # Comment out if not required.
+    [[local_server.secret_stores.oauth_secrets]]
+      key = "client_secret"
+      file = ".secret.client_secret"
+
+  [local_server.config_stores]
+
+    [local_server.config_stores.oauth_config]
+      format = "inline-toml"
+
+      [local_server.config_stores.oauth_config.contents] 
+        openid_configuration = "{\"issuer\":\"https://accounts.google.com\",\"authorization_endpoint\":\"https://accounts.google.com/o/oauth2/v2/auth\",\"device_authorization_endpoint\":\"https://oauth2.googleapis.com/device/code\",\"token_endpoint\":\"https://oauth2.googleapis.com/token\",\"userinfo_endpoint\":\"https://openidconnect.googleapis.com/v1/userinfo\",\"revocation_endpoint\":\"https://oauth2.googleapis.com/revoke\",\"jwks_uri\":\"https://www.googleapis.com/oauth2/v3/certs\",\"response_types_supported\":[\"code\",\"token\",\"id_token\",\"code token\",\"code id_token\",\"token id_token\",\"code token id_token\",\"none\"],\"subject_types_supported\":[\"public\"],\"id_token_signing_alg_values_supported\":[\"RS256\"],\"scopes_supported\":[\"openid\",\"email\",\"profile\"],\"token_endpoint_auth_methods_supported\":[\"client_secret_post\",\"client_secret_basic\"],\"claims_supported\":[\"aud\",\"email\",\"email_verified\",\"exp\",\"family_name\",\"given_name\",\"iat\",\"iss\",\"locale\",\"name\",\"picture\",\"sub\"],\"code_challenge_methods_supported\":[\"plain\",\"S256\"],\"grant_types_supported\":[\"authorization_code\",\"refresh_token\",\"urn:ietf:params:oauth:grant-type:device_code\",\"urn:ietf:params:oauth:grant-type:jwt-bearer\"]}"
+        jwks = "{\"keys\":[{\"e\":\"AQAB\",\"kty\":\"RSA\",\"n\":\"4bAT6C6EeX8Dspje3FrAXw-nnhNk04e1RmNa4kjc0CHf6Pk7ryARlwA-6YilyPABqQfYHx60s8oSnxvUVprFfQ2-Q8aAZO7bPKSxnoGlcKERL2oLNA4Msvc89N9Y5ycThZUplf_QC19e6jyYXN6Nz-UnJSCLrtQY8tVhhVRs61j4A2N_p-enAi-r704Qi1-v-DKV4eVRkClKViploo8NyjUaT9L4vbBssPCjyimJzsWnEe1fED5c4LnHeArYzA_FEn3JJotqDIz9t2VnvZNTMhizHEX4VnORlEWMEfR8n4CEHQx7PcQUOmfqyw08gWeXQl1-uTjtIGaE-sRIv9u_vQ\",\"alg\":\"RS256\",\"kid\":\"2af90e87be140c20038898a6efa11283dab6031d\",\"use\":\"sig\"},{\"n\":\"nzGsrziOYrMVYMpvUZOwkKNiPWcOPTYRYlDSdRW4UpAHdWPbPlyqaaphYhoMB5DXrVxI3bdvm7DOlo-sHNnulmAFQa-7TsQMxrZCvVdAbyXGID9DZYEqf8mkCV1Ohv7WY5lDUqlybIk1OSHdK7-1et0QS8nn-5LojGg8FK4ssLf3mV1APpujl27D1bDhyRb1MGumXYElwlUms7F9p9OcSp5pTevXCLmXs9MJJk4o9E1zzPpQ9Ko0lH9l_UqFpA7vwQhnw0nbh73rXOX2TUDCUqL4ThKU5Z9Pd-eZCEOatKe0mJTpQ00XGACBME_6ojCdfNIJr84Y_IpGKvkAEksn9w\",\"kty\":\"RSA\",\"alg\":\"RS256\",\"e\":\"AQAB\",\"kid\":\"87bbe0815b064e6d449cac999f0e50e72a3e4374\",\"use\":\"sig\"}]}"
+        callback_path = "/callback"
+        scope = "openid"
+        introspect_access_token = "true"
+        jwt_access_token = "false"
+        code_challenge_method = "S256"

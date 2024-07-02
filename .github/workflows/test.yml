@@ -16,7 +16,10 @@ jobs:
       with:
         toolchain: ${{ matrix.rust-toolchain }}
         targets: wasm32-wasi
-        components: clippy, rustfmt, audit
+        components: clippy, rustfmt
+    - name: Install audit
+      run: cargo install cargo-audit
+      shell: bash 
     - name: Cache cargo registry
       uses: actions/cache@v3
       with:
@@ -44,6 +47,7 @@ jobs:
     - name: clippy
       run: cargo clippy
       shell: bash
+
     - name: audit
       run: cargo audit
       shell: bash

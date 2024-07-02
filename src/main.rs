@@ -22,7 +22,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     println!("FASTLY_SERVICE_VERSION: {}", fastly_service_version);
 
     // Load the service configuration, and the OpenID discovery and token signature metadata.
-    let settings = Config::load();
+    let settings = Config::load().expect("Could not load configuration.");
 
     // Parse the Cookie header.
     let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
@@ -61,7 +61,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 // Authenticate the state token returned by the IdP,
                 // and verify that the state we stored matches its subject claim.
                 println!("Verifying the token's claims and matching state...");
-                match NonceToken::new(settings.config.nonce_secret).get_claimed_state(&qs.state) {
+                match NonceToken::new(&settings.config.nonce_secret).get_claimed_state(&qs.state) {
                     Some(claimed_state) => {
                         if state != &claimed_state {
                             return Ok(responses::unauthorized("State mismatch."));
@@ -75,15 +75,15 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 println!("Exchanging the authorization code for tokens...");
                 let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
-                        client_id: settings.config.client_id,
-                        client_secret: settings.config.client_secret,
+                        client_id: &settings.config.client_id,
+                        client_secret: settings.config.client_secret.as_deref(),
                         code: &qs.code,
                         code_verifier,
                         grant_type: "authorization_code",
                         redirect_uri: &redirect_uri,
                     })
                     .unwrap()
-                    .send("idp")?;
+                    .send(config::IDP_BACKEND_NAME)?;
                 // If the exchange is successful, proceed with the original request.
                 if exchange_res.get_status().is_success() {
                     println!("Exchange successful. Recreating the original request...");
@@ -119,9 +119,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
             // Validate the access token using the OpenID userinfo endpoint;
             // bearer authentication supports opaque, JWT and other token types (PASETO, Hawk),
             // depending on your Identity Provider configuration.
-            let mut userinfo_res = Request::get(settings.openid_configuration.userinfo_endpoint)
+            let mut userinfo_res = Request::get(&settings.openid_configuration.userinfo_endpoint)
                 .with_header(AUTHORIZATION, format!("Bearer {}", access_token))
-                .send("idp")?;
+                .send(config::IDP_BACKEND_NAME)?;
             // Surface any errors and respond early.
             if userinfo_res.get_status().is_client_error() {
                 return Ok(responses::unauthorized(userinfo_res.take_body()));
@@ -151,14 +151,14 @@ fn main(mut req: Request) -> Result<Response, Error> {
         req.set_header("fastly-id-token", *id_token);
 
         // Send the request to the origin backend.
-        return Ok(req.send("backend")?);
+        return Ok(req.send(config::ORIGIN_BACKEND_NAME)?);
     }
 
     // Otherwise, start the OAuth 2.0 authorization code flow.
     println!("Starting OAuth 2.0 authorization code flow...");
 
     // Generate the Proof Key for Code Exchange (PKCE) code verifier and code challenge.
-    let pkce = Pkce::new(settings.config.code_challenge_method);
+    let pkce = Pkce::new(&settings.config.code_challenge_method);
     // Generate the OAuth 2.0 state parameter, used to prevent CSRF attacks,
     // and store the original request path and query string.
     let state = {
@@ -174,14 +174,14 @@ fn main(mut req: Request) -> Result<Response, Error> {
     // This is a random value with a twist: in is a time limited token (JWT)
     // that encodes the nonce and the state within its claims.
     let (state_and_nonce, nonce) =
-        NonceToken::new(settings.config.nonce_secret).generate_from_state(&state);
+        NonceToken::new(&settings.config.nonce_secret).generate_from_state(&state);
 
     // Build the authorization request.
     let authorize_req = Request::get(settings.openid_configuration.authorization_endpoint)
         .with_query(&AuthCodePayload {
-            client_id: settings.config.client_id,
+            client_id: &settings.config.client_id,
             code_challenge: &pkce.code_challenge,
-            code_challenge_method: settings.config.code_challenge_method,
+            code_challenge_method: &settings.config.code_challenge_method,
             redirect_uri: &redirect_uri,
             response_type: "code",
             scope: &settings.config.scope,

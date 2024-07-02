@@ -1,6 +1,6 @@
 # Fastly Compute OAuth application starter kit
 
-Connect to an identity provider such as Auth0 using OAuth 2.0 and validate authentication status at the Edge, to authorize access to your edge or origin hosted applications.
+Connect to an identity provider such as Okta, Auth0, Azure AD, Google, or Amazon Cognito using OAuth 2.0 and validate authentication status at the Edge, to authorize access to your edge or origin hosted applications.
 
 **For more details about other starter kits for Compute, see the [Fastly developer hub](https://developer.fastly.com/solutions/starters)**
 
@@ -13,44 +13,72 @@ It includes [JSON Web Token (JWT)](https://oauth.net/2/jwt/) verification, and [
 ![A simplified flow diagram of authentication using Compute](https://user-images.githubusercontent.com/12828487/111877689-4b876500-899c-11eb-9d6c-6ecc240fa317.png)
 
 Scroll down to view [the flow in more detail](#the-flow-in-detail).
+
 ## Getting started
 
 After you have installed the starter kit, you'll need to do some configuration before you can deploy it, so that Fastly knows which identity provider to use and how to authenticate.
 
-### Set up an identity provider
+### 1. Set up an identity provider
 
 You might operate your own identity service, but any [OAuth 2.0, OpenID Connect (OIDC) conformant provider](https://en.wikipedia.org/wiki/List_of_OAuth_providers) (IdP) will work.  You will need the following from your IdP:
 
-* A *Client ID* -> Add to `src/config.toml`
-* An *OpenID Connect Discovery document* -> Save as `src/well-known/openid-configuration.json`
-* A *JSON Web key set* -> Save as `src/well-known/jwks.json`
-* The hostname of the IdP's *authorization server* -> Create as a backend called `idp` on your Fastly service
+* A *Client ID* 
+* For some IdPs, a *Client Secret* 
+* The hostname of the IdP's *authorization server* 
+* An *OpenID Connect (OIDC) Discovery document*, typically at `https://{authorization-server-hostname}/.well-known/openid-configuration`
+* A *JSON Web key set* 
 
-As an example, if you are using Auth0, follow these steps after installing the starter kit:
+#### Example: Google
 
-1. In the [Auth0 dashboard](https://manage.auth0.com/), choose **Create Application**. Give your app a name and choose "Regular web application".
-   - The *client ID* (eg. `4PWZBMqMWxnKXt1heitack0Jy2xRQP0p`) is shown next to your application name.
-1. Open `src/config.toml` in your Fastly project and paste in the `client_id` from your IdP.  Set the `nonce_secret` field to a long, non-guessable random string of your choice.  Save the file.
-1. Back in Auth0's dashboard, click **Settings**, and note down the *authorization server* hostname (eg. `dev-wna8lqtb.us.auth0.com`) is shown in the **Domain** field.
-1. In a new tab, navigate to `https://{authorization-server-hostname}/.well-known/openid-configuration`.  Save it to `src/well-known/openid-configuration.json` in your Fastly project.
-1. Open the file you just created and locate the `jwks_uri` property.  Fetch the document at that URL and save it to `src/well-known/jwks.json` in your Fastly project.
+This starter kit is pre-configured to work with Google OAuth clients, so if you are using Google, follow these steps:
 
-### Deploy the Fastly service and get a domain
+1. In the [Google API Console](https://console.cloud.google.com/), search for "oauth" and navigate to the [Credentials](https://console.cloud.google.com/apis/credentials) page. Select **+ Create Credentials** > **OAuth Client ID**.
+   1. Select the **Web application** type and give your app a name.
+   1. Add `http://127.0.0.1:7676` and `http://127.0.0.1:7676/callback` to **Authorized JavaScript origins** and **Authorized redirect URIs**, respectively. This is for local testing only; remember to remove these URLs later!
+   1. Tap **Create**.
+1. Store your newly created credentials in new (gitignored) files in the root of your Compute project:
+   - Paste the *client ID* in `.secret.client_id`
+   - Paste the *client secret* in `.secret.client_secret` 
+   - Type a long, non-guessable random string of your choice into `.secret.nonce_secret`
+      ```sh
+      dd if=/dev/random bs=32 count=1 | base64 > .secret.nonce_secret
+      ```
+1. Fetch Google's OIDC Discovery document from [accounts.google.com/.well-known/openid-configuration](https://accounts.google.com/.well-known/openid-configuration). Paste the JSON-stringified contents of the file into the `openid_configuration` property in `fastly.toml`, under `[local_server.config_stores.oauth_config.contents]`.
+   ```sh
+   curl -s https://accounts.google.com/.well-known/openid-configuration | jq -c @json
+   ```
+1. Note the `jwks_uri` property inside the OIDC Discovery document. Fetch the document at that URL and paste its JSON-stringified contents into the `jwks` property in `fastly.toml`, under `[local_server.config_stores.oauth_config.contents]`.
+   ```sh
+   curl -s https://www.googleapis.com/oauth2/v3/certs | jq -c @json
+   ```
+
+### 2. Test your configuration locally
+
+### 3. Deploy the Fastly service and get a domain
 
 Now you can build and deploy your new service:
 
 ```term
-$ fastly compute publish
+fastly compute publish
 ```
 
-You'll be prompted to enter the hostname of your own origin to configure the backend called `backend`, and also the authorization server of the identity provider which will be used to configure a backend called `idp`.  When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
-### Link the identity provider to your Fastly domain
+This will run through the [`setup` configuration](https://www.fastly.com/documentation/reference/compute/fastly-toml/#setup-information) defined in `fastly.toml` before building and publishing your Compute service.
 
-Add `https://{your-fastly-domain}/callback` to the list of allowed callback URLs in your identity provide's app configuration (In Auth0, within your application's **Settings** tab, the field is labelled **Allowed Callback URLs**).
+You'll be prompted to enter the hostname of your own origin to configure the backend called `origin`, and also the authorization server of the identity provider (IdP) which will be used to configure a backend called `idp`. 
+
+A [secret store](https://docs.fastly.com/en/guides/working-with-secret-stores) called `oauth_secrets` will automatically be created, and you'll be prompted for your `client_id`, `client_secret` and `nonce_secret`.
+
+A [config store](https://docs.fastly.com/en/guides/working-with-config-stores) called `oauth_config` will automatically be created, and you'll be prompted to input values for `openid_configuration` and `jwks`. You can find these in `fastly.toml` if you followed the instrucitons in [Step 1](#example-google).
+
+When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
+
+### 4. Link the identity provider to your Fastly domain
+
+Add `https://{your-fastly-domain}/callback` to the list of allowed callback URLs in your IdP's app configuration (for Google, this is **Authorized redirect URIs** within your application's OAuth 2.0 Client **Credentials**).
 
 This allows the authorization server to send the user back to the Compute service.
 
-### Try it out!
+### 5. Try it out!
 
 Now you can visit your Fastly-assigned domain.  You should be prompted to follow a login flow with your identity provider, and then after successfully authenticating, will see content delivered from your own origin.
 
@@ -78,6 +106,30 @@ Here is how the authentication process works:
    * An `id_token`, which contains the user's profile information.
 1. The end-user is redirected to the original request URL (`/articles/kittens`), along with their security tokens stored in cookies.
 1. When the user makes the redirected request (or subsequent requests accompanied by security tokens), the edge verifies the integrity, validity and claims for both tokens. If the tokens are still good, it proxies the request to your origin.
+
+## Configuration
+
+### Secrets
+
+The following secrets must be stored in the `oauth_secrets` [secret store](https://docs.fastly.com/en/guides/working-with-secret-stores) associated with the Compute service:
+
+| Secret | Description |
+|---|---|
+| `client_id` | [OAuth 2.0 client identifier](https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1) valid at the IdP's authorization server. |
+| `nonce_secret` | A secret to verify the [OpenID nonce](https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest) used to mitigate replay attacks. It must be sufficiently random to not be guessable. |
+| `client_secret` (optional) | Optional client secret for certain IdPs' `token` endpoint. Google, for example, [requires a client secret](https://developers.google.com/identity/protocols/oauth2/native-app#exchange-authorization-code) obtained from its API console. WARNING: Including this parameter produces [NON-NORMATIVE OAuth 2.0 token requests](https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.1). |
+
+### Optional configuration
+
+The following keys may be stored in the `oauth_config` [config store](https://docs.fastly.com/en/guides/working-with-config-stores) associated with the Compute service:
+
+| Key | Description | Default |
+|---|---|---|
+| `callback_path` | Path for the [redirection URI](https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.2.1) to which OAuth 2.0 responses will be sent. | `/callback` |
+| `scope` | OAuth 2.0 [scope list](https://oauth.net/2/scope) (one or more space-separated scopes). | `openid` |
+| `introspect_access_token` | Whether to verify the access token using the [OpenID userinfo endpoint](https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.3). Used to introspect opaque and other types of tokens revocable by the authorization server. If revocation is not a concern – or when IdP rate limits are – set to `true` to validate JWT access tokens at the edge. | `false` |
+| `jwt_access_token` | Whether the access token is a [JWT](https://tools.ietf.org/html/rfc7519). JWT access tokens may be validated at the edge, using an approach similar to ID tokens. Omitted if `introspect_access_token` is `true`. | `false` |
+| `code_challenge_method` | [PKCE code challenge](https://datatracker.ietf.org/doc/html/rfc7636#section-4.3) method. | `S256` |
 
 ## Issues
 

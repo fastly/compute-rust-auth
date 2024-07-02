@@ -1,80 +1,100 @@
+use fastly::{ConfigStore, SecretStore};
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-#[serde(default)]
-pub struct ServiceConfiguration<'a> {
-    pub client_id: &'a str,
-    pub client_secret: Option<&'a str>,
+pub const IDP_BACKEND_NAME: &str = "idp";
+pub const ORIGIN_BACKEND_NAME: &str = "origin";
+
+const STATE_PARAMETER_LENGTH: usize = 10;
+
+#[derive(Deserialize, Default)]
+pub struct ServiceConfiguration {
+    pub client_id: String,
+    pub client_secret: Option<String>,
+    pub nonce_secret: String,
     pub introspect_access_token: bool,
     pub jwt_access_token: bool,
-    pub callback_path: &'a str,
-    pub code_challenge_method: &'a str,
+    pub callback_path: String,
+    pub code_challenge_method: String,
     pub state_parameter_length: usize,
     pub scope: String,
-    pub nonce_secret: &'a str,
-}
-
-impl Default for ServiceConfiguration<'static> {
-    fn default() -> Self {
-        Self {
-            client_id: "",
-            client_secret: None,
-            introspect_access_token: false,
-            jwt_access_token: false,
-            callback_path: "/callback",
-            code_challenge_method: "S256",
-            state_parameter_length: 10,
-            scope: "openid".to_string(),
-            nonce_secret: "",
-        }
-    }
 }
 
 #[derive(Deserialize, Default)]
-pub struct OpenIdConfiguration<'a> {
-    pub issuer: &'a str,
-    pub authorization_endpoint: &'a str,
-    pub token_endpoint: &'a str,
-    pub userinfo_endpoint: &'a str,
+pub struct OpenIdConfiguration {
+    pub issuer: String,
+    pub authorization_endpoint: String,
+    pub token_endpoint: String,
+    pub userinfo_endpoint: String,
 }
 
 #[derive(Deserialize, Default)]
-pub struct JsonWebKey<'a> {
+pub struct JsonWebKey {
     #[serde(rename = "kid")]
-    pub key_id: &'a str,
+    pub key_id: String,
     #[serde(rename = "e")]
-    pub exponent: &'a str,
+    pub exponent: String,
     #[serde(rename = "n")]
-    pub modulus: &'a str,
+    pub modulus: String,
     #[serde(default)]
-    pub issuer: &'a str,
+    pub issuer: String,
 }
 
 #[derive(Deserialize, Default)]
-pub struct Jwks<'a> {
-    #[serde(borrow)]
-    pub keys: Vec<JsonWebKey<'a>>,
+pub struct Jwks {
+    pub keys: Vec<JsonWebKey>,
 }
 
 #[derive(Deserialize, Default)]
 pub struct Config {
-    #[serde(borrow)]
-    pub config: ServiceConfiguration<'static>,
-    #[serde(borrow)]
-    pub jwks: Jwks<'static>,
-    #[serde(borrow)]
-    pub openid_configuration: OpenIdConfiguration<'static>,
+    pub config: ServiceConfiguration,
+    pub jwks: Jwks,
+    pub openid_configuration: OpenIdConfiguration,
 }
 
 impl Config {
-    pub fn load() -> Self {
-        Self {
-            config: toml::from_str(include_str!("config.toml")).unwrap(),
-            jwks: serde_json::from_str(include_str!("well-known/jwks.json")).unwrap(),
-            openid_configuration: serde_json::from_str(include_str!(
-                "well-known/openid-configuration.json"
-            ))
-            .unwrap(),
-        }
+    pub fn load() -> Result<Self, fastly::Error> {
+        let secrets =
+            SecretStore::open("oauth_secrets").expect("Could not open oauth_secrets secret store");
+
+        let get_secret = |key: &str| match secrets.get(key) {
+            Some(secret) => Some(
+                std::str::from_utf8(&secret.plaintext())
+                    .unwrap()
+                    .to_string(),
+            ),
+            _ => None,
+        };
+
+        let require_secret =
+            |key: &str| get_secret(key).expect(&format!("Required secret {} not found", key));
+
+        let cfg = ConfigStore::open("oauth_config");
+        let jwks = cfg.get("jwks").expect("JWKS metadata not found");
+        let openid_config = cfg
+            .get("openid_configuration")
+            .expect("OIDC metadata not found");
+
+        let value_or = |key: &str, default: &str| cfg.get(key).unwrap_or(default.to_string());
+
+        let value_or_false = |key: &str| match cfg.get(key) {
+            Some(val) => val.parse::<bool>().unwrap_or_default(),
+            _ => false,
+        };
+
+        Ok(Self {
+            config: ServiceConfiguration {
+                client_id: require_secret("client_id"),
+                client_secret: get_secret("client_secret"),
+                nonce_secret: require_secret("nonce_secret"),
+                callback_path: value_or("callback_path", "/callback"),
+                scope: value_or("scope", "openid"),
+                code_challenge_method: value_or("code_challenge_method", "S256"),
+                introspect_access_token: value_or_false("introspect_access_token"),
+                jwt_access_token: value_or_false("jwt_access_token"),
+                state_parameter_length: STATE_PARAMETER_LENGTH,
+            },
+            jwks: serde_json::from_str(&jwks).unwrap(),
+            openid_configuration: serde_json::from_str(&openid_config).unwrap(),
+        })
     }
 }

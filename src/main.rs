@@ -41,7 +41,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             "https://{}{}",
             req.get_url().host_str().unwrap(),
             settings.config.callback_path
-        )
+        ),
     };
 
     println!("Redirect URI: {}", redirect_uri);
@@ -192,8 +192,11 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     println!("PKCE code verifier: {}", pkce.code_verifier);
     println!("State: {}", state);
-    println!("Redirecting to: {} (and setting code_verifier and state cookies)", authorize_req.get_url_str());
-
+    println!(
+        "Redirecting to: {} (and setting code_verifier and state cookies)",
+        authorize_req.get_url_str()
+    );
+    
     // Redirect to the Identity Provider's login and authorization prompt.
     Ok(responses::temporary_redirect(
         authorize_req.get_url_str(),

@@ -54,6 +54,14 @@ This starter kit is pre-configured to work with Google OAuth clients, so if you 
 
 ### 2. Test your configuration locally
 
+Spin up the local development server for your Compute service:
+
+```term
+fastly compute serve
+```
+
+Browse to http://127.0.0.1:7676. If everything is configured correctly, you should be able to complete an end-to-end OAuth 2.0 flow.
+
 ### 3. Deploy the Fastly service and get a domain
 
 Now you can build and deploy your new service:

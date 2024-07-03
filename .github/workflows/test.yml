@@ -10,13 +10,16 @@ jobs:
     environment: test
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ matrix.rust-toolchain }}
-    - name: Add wasm32-wasi Rust target
-      run: rustup target add wasm32-wasi --toolchain ${{ matrix.rust-toolchain }}
+        targets: wasm32-wasi
+        components: clippy, rustfmt
+    - name: Install audit
+      run: cargo install cargo-audit
+      shell: bash 
     - name: Cache cargo registry
       uses: actions/cache@v3
       with:
@@ -32,33 +35,16 @@ jobs:
       with:
         path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-    - name: Install fmt
-      run: rustup component add rustfmt
-      shell: bash
-    - name: Install clippy
-      run: rustup component add clippy
-      shell: bash
-    - name: Install audit
-      run: cargo install cargo-audit
-      shell: bash 
-    - name: Prepare to store metadata
-      run: mkdir -p src/well-known
-      shell: bash
-    - name: Store JWKS metadata
-      run: echo "${{ secrets.JWKS_JSON }}" > src/well-known/jwks.json
-      shell: bash    
-    - name: Store OIDC metadata
-      run: echo "${{ secrets.OIDC_METADATA_JSON }}" > src/well-known/openid-configuration.json
-      shell: bash
+    - name: Store secrets
+      run: |
+        echo "${{ secrets.CLIENT_ID }}" > .secrets.client_id
+        echo "${{ secrets.CLIENT_SECRET }}" > .secrets.client_secret
+        dd if=/dev/random bs=32 count=1 | base64 > .secret.nonce_secret 
     - name: Check binaries and format
       run: RUSTFLAGS="--deny warnings" cargo check --bins --target wasm32-wasi && cargo fmt -- --check
-      shell: bash
-    - name: clippy
+    - name: Run clippy
       run: cargo clippy
-      shell: bash
-    - name: audit
+    - name: Run audit
       run: cargo audit
-      shell: bash
-    - name: build
+    - name: Run build
       run: cargo build
-      shell: bash

@@ -35,8 +35,8 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
         .find(|&k| k.key_id == key_id)
         .unwrap();
     // Reconstruct the public key used to sign the token.
-    let modulus = CUSTOM_ENGINE.decode(key_metadata.modulus)?;
-    let exponent = CUSTOM_ENGINE.decode(key_metadata.exponent)?;
+    let modulus = CUSTOM_ENGINE.decode(&key_metadata.modulus)?;
+    let exponent = CUSTOM_ENGINE.decode(&key_metadata.exponent)?;
     let public_key = RS256PublicKey::from_components(&modulus, &exponent)?;
     // Verify the token's claims.
     // Custom claims are also supported – see https://docs.rs/jwt-simple/0.9.3/jwt_simple/index.html#custom-claims
@@ -46,9 +46,9 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
             // and will therefore include the non-standard "issuer" property in JWK metadata.
             // Uncomment the line below to include the issuer property from the key metadata during verification:
             // key_metadata.issuer,
-            settings.openid_configuration.issuer,
+            &settings.openid_configuration.issuer,
         ])),
-        allowed_audiences: Some(HashSet::from_strings(&[settings.config.client_id])),
+        allowed_audiences: Some(HashSet::from_strings(&[&settings.config.client_id])),
         ..Default::default()
     };
     public_key.verify_token::<CustomClaims>(token_string, Some(verification_options))

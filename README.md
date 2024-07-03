@@ -76,7 +76,7 @@ You'll be prompted to enter the hostname of your own origin to configure the bac
 
 A [secret store](https://docs.fastly.com/en/guides/working-with-secret-stores) called `oauth_secrets` will automatically be created, and you'll be prompted for your `client_id`, `client_secret` and `nonce_secret`.
 
-A [config store](https://docs.fastly.com/en/guides/working-with-config-stores) called `oauth_config` will automatically be created, and you'll be prompted to input values for `openid_configuration` and `jwks`. You can find these in `fastly.toml` if you followed the instrucitons in [Step 1](#example-google).
+A [config store](https://docs.fastly.com/en/guides/working-with-config-stores) called `oauth_config` will automatically be created, and you'll be prompted to input values for `openid_configuration` and `jwks`. You can find these in `fastly.toml` if you followed the instructions in [Step 1](#example-google).
 
 When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
 

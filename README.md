@@ -32,7 +32,7 @@ You might operate your own identity service, but any [OAuth 2.0, OpenID Connect 
 
 This starter kit is pre-configured to work with Google OAuth clients, so if you are using Google, follow these steps:
 
-1. In the [Google API Console](https://console.cloud.google.com/), search for "oauth" and navigate to the [Credentials](https://console.cloud.google.com/apis/credentials) page. Select **+ Create Credentials** > **OAuth Client ID**.
+1. In the [Google API Console](https://console.cloud.google.com/), search for "oauth" and navigate to the [Credentials](https://console.cloud.google.com/apis/credentials) page. Select **+ Create Credentials** > **OAuth client ID**.
    1. Select the **Web application** type and give your app a name.
    1. Add `http://127.0.0.1:7676` and `http://127.0.0.1:7676/callback` to **Authorized JavaScript origins** and **Authorized redirect URIs**, respectively. This is for local testing only; remember to remove these URLs later!
    1. Tap **Create**.

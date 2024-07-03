@@ -32,7 +32,7 @@ You might operate your own identity service, but any [OAuth 2.0, OpenID Connect 
 
 This starter kit is pre-configured to work with Google OAuth clients, so if you are using Google, follow these steps:
 
-1. In the [Google API Console](https://console.cloud.google.com/), search for "oauth" and navigate to the [Credentials](https://console.cloud.google.com/apis/credentials) page. Select **+ Create Credentials** > **OAuth Client ID**.
+1. In the [Google API Console](https://console.cloud.google.com/), search for "oauth" and navigate to the [Credentials](https://console.cloud.google.com/apis/credentials) page. Select **+ Create Credentials** > **OAuth client ID**.
    1. Select the **Web application** type and give your app a name.
    1. Add `http://127.0.0.1:7676` and `http://127.0.0.1:7676/callback` to **Authorized JavaScript origins** and **Authorized redirect URIs**, respectively. This is for local testing only; remember to remove these URLs later!
    1. Tap **Create**.
@@ -76,7 +76,7 @@ You'll be prompted to enter the hostname of your own origin to configure the bac
 
 A [secret store](https://docs.fastly.com/en/guides/working-with-secret-stores) called `oauth_secrets` will automatically be created, and you'll be prompted for your `client_id`, `client_secret` and `nonce_secret`.
 
-A [config store](https://docs.fastly.com/en/guides/working-with-config-stores) called `oauth_config` will automatically be created, and you'll be prompted to input values for `openid_configuration` and `jwks`. You can find these in `fastly.toml` if you followed the instrucitons in [Step 1](#example-google).
+A [config store](https://docs.fastly.com/en/guides/working-with-config-stores) called `oauth_config` will automatically be created, and you'll be prompted to input values for `openid_configuration` and `jwks`. You can find these in `fastly.toml` if you followed the instructions in [Step 1](#example-google).
 
 When the deploy is finished you'll be given a Fastly-assigned domain such as `random-funky-words.edgecompute.app`.
 

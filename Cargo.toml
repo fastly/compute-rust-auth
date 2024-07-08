@@ -11,7 +11,7 @@ debug = true
 fastly = "0.10.1"
 hmac-sha256 = "1.1.7"
 rand = "0.8.5"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 base64 = "0.22.1"
 jwt-simple = "0.12.9"

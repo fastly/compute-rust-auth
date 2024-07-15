@@ -356,9 +356,9 @@ dependencies = [
 
 [[package]]
 name = "fastly"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5a264a5d96c95d4417ec84325d9da58a6790fa856365f87bb66bd27ee3c65da"
+checksum = "75610a3b570514704d8755027dbf1d19d6a4d2c68ed43637f67e64f4fcb6856c"
 dependencies = [
  "anyhow",
  "bytes",

@@ -4,7 +4,7 @@ jobs:
   test:
     strategy:
       matrix:
-        rust-toolchain: [stable]
+        rust-toolchain: [1.83.0]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     environment: test
@@ -12,7 +12,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@1.83.0
       with:
         toolchain: ${{ matrix.rust-toolchain }}
         targets: wasm32-wasi

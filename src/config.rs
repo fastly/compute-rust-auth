@@ -57,17 +57,17 @@ impl Config {
         let secrets =
             SecretStore::open("oauth_secrets").expect("Could not open oauth_secrets secret store");
 
-        let get_secret = |key: &str| match secrets.get(key) {
-            Some(secret) => Some(
+        let get_secret = |key: &str| {
+            secrets.get(key).map(|secret| {
                 std::str::from_utf8(&secret.plaintext())
                     .unwrap()
-                    .to_string(),
-            ),
-            _ => None,
+                    .to_string()
+            })
         };
 
-        let require_secret =
-            |key: &str| get_secret(key).expect(&format!("Required secret {} not found", key));
+        let require_secret = |key: &str| {
+            get_secret(key).unwrap_or_else(|| panic!("Required secret {} not found", key))
+        };
 
         let cfg = ConfigStore::open("oauth_config");
         let jwks = cfg.get("jwks").expect("JWKS metadata not found");

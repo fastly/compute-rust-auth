@@ -2,10 +2,15 @@
 name = "compute-rust-auth"
 version = "0.4.0"
 authors = []
-edition = "2018"
+edition = "2021"
+# Remove this line if you want to be able to publish this crate on crates.io.
+# Otherwise, `publish = false` prevents an accidental `cargo publish` from revealing private source.
+publish = false
 
 [profile.release]
-debug = true
+debug = 1
+codegen-units = 1
+lto = "fat"
 
 [dependencies]
 fastly = "0.11.2"

@@ -15,6 +15,7 @@ const CUSTOM_ENGINE: engine::GeneralPurpose =
 pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
     token_string: &str,
     settings: &Config,
+    required_nonce: Option<&str>,
 ) -> Result<JWTClaims<CustomClaims>, Error> {
     // Peek at the token metadata before verification and retrieve the key identifier,
     // in order to pick the right key out of the JWK set.
@@ -49,6 +50,7 @@ pub fn validate_token_rs256<CustomClaims: Serialize + DeserializeOwned>(
             &settings.openid_configuration.issuer,
         ])),
         allowed_audiences: Some(HashSet::from_strings(&[&settings.config.client_id])),
+        required_nonce: required_nonce.map(str::to_owned),
         ..Default::default()
     };
     public_key.verify_token::<CustomClaims>(token_string, Some(verification_options))
@@ -77,14 +79,20 @@ impl NonceToken {
             nonce,
         )
     }
-    // Verifies the token and retrieves its subject claim, a state string.
-    pub fn get_claimed_state(&self, state_and_nonce: &str) -> Option<String> {
-        match &self
-            .auth_key
-            .verify_token::<NoCustomClaims>(state_and_nonce, None)
-        {
-            Ok(state_and_nonce_claim) => state_and_nonce_claim.subject.to_owned(),
-            _ => None,
-        }
+    // Verifies the token, requires its subject claim to equal `expected_state`,
+    // and returns the attached nonce.
+    pub fn verify_and_claim_nonce(
+        &self,
+        state_and_nonce: &str,
+        expected_state: &str,
+    ) -> Option<String> {
+        let opts = VerificationOptions {
+            required_subject: Some(expected_state.to_string()),
+            ..Default::default()
+        };
+        self.auth_key
+            .verify_token::<NoCustomClaims>(state_and_nonce, Some(opts))
+            .ok()?
+            .nonce
     }
 }

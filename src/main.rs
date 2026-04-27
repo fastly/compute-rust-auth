@@ -175,8 +175,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
     let state = {
         let path = req.get_path();
         if !is_safe_redirect_target(path) {
-            return Ok(Response::from_status(StatusCode::BAD_REQUEST)
-                .with_body("Invalid request path."));
+            return Ok(
+                Response::from_status(StatusCode::BAD_REQUEST).with_body("Invalid request path.")
+            );
         }
         let (sep, query) = match req.get_query_str() {
             Some(q) => ("?", q),

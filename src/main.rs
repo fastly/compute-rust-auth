@@ -6,12 +6,19 @@ mod pkce;
 mod responses;
 
 use config::Config;
-use fastly::http::header::AUTHORIZATION;
+use fastly::http::{header::AUTHORIZATION, StatusCode};
 use fastly::{Error, Request, Response};
 use idp::{AuthCodePayload, AuthorizeResponse, CallbackQueryParameters, ExchangePayload};
 use jwt::{validate_token_rs256, NonceToken};
 use jwt_simple::claims::NoCustomClaims;
 use pkce::{rand_chars, Pkce};
+
+fn is_safe_redirect_target(s: &str) -> bool {
+    s.starts_with('/')
+        && !s.starts_with("//")
+        && !s.contains('\\')
+        && !s.chars().any(char::is_control)
+}
 
 #[fastly::main]
 fn main(mut req: Request) -> Result<Response, Error> {
@@ -90,6 +97,10 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     // Strip the random state from the state cookie value to get the original request.
                     let original_req =
                         &state[..(state.len() - settings.config.state_parameter_length)];
+                    if !is_safe_redirect_target(original_req) {
+                        return Ok(Response::from_status(StatusCode::BAD_REQUEST)
+                            .with_body("Invalid redirect target."));
+                    }
                     // Deserialize the response from the authorize step.
                     let auth = exchange_res.take_body_json::<AuthorizeResponse>().unwrap();
                     // Replay the original request, setting the tokens as cookies.
@@ -163,6 +174,11 @@ fn main(mut req: Request) -> Result<Response, Error> {
     // and store the original request path and query string.
     let state = {
         let path = req.get_path();
+        if !is_safe_redirect_target(path) {
+            return Ok(
+                Response::from_status(StatusCode::BAD_REQUEST).with_body("Invalid request path.")
+            );
+        }
         let (sep, query) = match req.get_query_str() {
             Some(q) => ("?", q),
             None => ("", ""),

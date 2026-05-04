@@ -65,22 +65,19 @@ fn main(mut req: Request) -> Result<Response, Error> {
             (Some(state), Some(code_verifier)) => {
                 println!("state and code_verifier cookies found.");
 
-                // Authenticate the state token returned by the IdP,
-                // and verify that the state we stored matches its subject claim.
+                // Authenticate the state token returned by the IdP, require its
+                // subject claim to equal the cookie value, and recover the nonce
+                // we attached.
                 println!("Verifying the token's claims and matching state...");
-                match NonceToken::new(&settings.config.nonce_secret).get_claimed_state(&qs.state) {
-                    Some(claimed_state) => {
-                        if state != &claimed_state {
-                            return Ok(responses::unauthorized("State mismatch."));
-                        }
-                    }
-                    _ => {
-                        return Ok(responses::unauthorized("Could not verify state."));
-                    }
+                let nonce = match NonceToken::new(&settings.config.nonce_secret)
+                    .verify_and_claim_nonce(&qs.state, state)
+                {
+                    Some(n) => n,
+                    None => return Ok(responses::unauthorized("Could not verify state.")),
                 };
                 // Exchange the authorization code for tokens.
                 println!("Exchanging the authorization code for tokens...");
-                let mut exchange_res = Request::post(settings.openid_configuration.token_endpoint)
+                let mut exchange_res = Request::post(&settings.openid_configuration.token_endpoint)
                     .with_body_form(&ExchangePayload {
                         client_id: &settings.config.client_id,
                         client_secret: settings.config.client_secret.as_deref(),
@@ -103,6 +100,17 @@ fn main(mut req: Request) -> Result<Response, Error> {
                     }
                     // Deserialize the response from the authorize step.
                     let auth = exchange_res.take_body_json::<AuthorizeResponse>().unwrap();
+                    // Validate the IdP-signed id_token now and require the nonce we
+                    // sent in the authorize request to come back unchanged.
+                    if validate_token_rs256::<NoCustomClaims>(
+                        &auth.id_token,
+                        &settings,
+                        Some(&nonce),
+                    )
+                    .is_err()
+                    {
+                        return Ok(responses::unauthorized("ID token invalid."));
+                    }
                     // Replay the original request, setting the tokens as cookies.
                     Ok(responses::temporary_redirect(
                         original_req,
@@ -139,7 +147,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             }
         // Validate the JWT access token.
         } else if settings.config.jwt_access_token
-            && validate_token_rs256::<NoCustomClaims>(access_token, &settings).is_err()
+            && validate_token_rs256::<NoCustomClaims>(access_token, &settings, None).is_err()
         {
             println!("Failed to validate the access token at the edge.");
             return Ok(responses::unauthorized("JWT access token invalid."));
@@ -147,7 +155,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
         // Validate the ID token.
         println!("Validating the ID token at the edge...");
-        if validate_token_rs256::<NoCustomClaims>(id_token, &settings).is_err() {
+        if validate_token_rs256::<NoCustomClaims>(id_token, &settings, None).is_err() {
             return Ok(responses::unauthorized("ID token invalid."));
         }
 
